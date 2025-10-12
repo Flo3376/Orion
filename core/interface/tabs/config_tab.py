@@ -8,6 +8,13 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from core.bus import EventBus
 from pathlib import Path
 
+# ✅ IMPORT DES STYLES SÉPARÉS
+from .styles import (
+    BUTTON_STYLES, SLIDER_CUSTOM, COMBOBOX_STYLE,
+    SECTION_HEADER, SUBSECTION_HEADER_NORMAL, SUBSECTION_HEADER_ALT,
+    VALUE_LABEL, FIELD_LABEL, MAIN_HEADER, FIELDS_CONTAINER, BROWSE_BUTTON,
+    SUBSECTION_CONTAINER, SUBSECTION_CONTAINER_ALT,
+)
 
 class NoWheelSlider(QtWidgets.QSlider):
     """Slider qui ignore les événements de molette"""
@@ -122,18 +129,7 @@ class ConfigTab(QtWidgets.QWidget):
         # En-tête
         header = QtWidgets.QLabel("CONFIGURATION • SYSTÈME • ORION")
         header.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        header.setStyleSheet("""
-            QLabel {
-                background: #ff9f1c;
-                color: black;
-                font-weight: 900;
-                font-size: 14px;
-                letter-spacing: 2px;
-                padding: 8px;
-                border-radius: 8px;
-                margin: 0px;
-            }
-        """)
+        header.setStyleSheet(MAIN_HEADER)
         layout.addWidget(header)
 
         # Zone scrollable
@@ -215,8 +211,6 @@ class ConfigTab(QtWidgets.QWidget):
                 "step": 0.5,
                 "unit": "%"
             }, "Résonance métallique (0% = normal, 100% = très métallique)"),
-
-            
 
             ("distortion", "slider_custom", {
                 "value": int(self._get_config_value("effects.skin.distortion", 0)),
@@ -494,39 +488,12 @@ class ConfigTab(QtWidgets.QWidget):
         
         # Titre de section
         section_header = QtWidgets.QLabel(title)
-        section_header.setStyleSheet("""
-            QLabel {
-                background: rgba(0, 209, 255, 0.2);
-                border-left: 4px solid #00d1ff;
-                color: #00d1ff;
-                font-weight: 700;
-                font-size: 12px;
-                letter-spacing: 1px;
-                padding: 6px 12px;
-                margin: 4px 0px;
-            }
-        """)
+        section_header.setStyleSheet(SECTION_HEADER)
         parent_layout.addWidget(section_header)
 
         # Container pour les champs
         fields_container = QtWidgets.QWidget()
-        fields_container.setStyleSheet("""
-            QWidget {
-                background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(0, 209, 255, 0.3);
-                border-radius: 8px;
-                padding: 4px;
-            }
-            QToolTip {
-                background-color: #1a1f2e;
-                color: #e6e6e6;
-                border: 2px solid #ff9f1c;
-                border-radius: 8px;
-                padding: 8px;
-                font-size: 12px;
-                max-width: 300px;
-            }
-        """)
+        fields_container.setStyleSheet(FIELDS_CONTAINER)
 
         main_layout = QtWidgets.QVBoxLayout(fields_container)
         main_layout.setContentsMargins(12, 12, 12, 12)
@@ -541,34 +508,14 @@ class ConfigTab(QtWidgets.QWidget):
                 subsection_description = field_data[3] if len(field_data) > 3 else None
                 
                 subsection_header = QtWidgets.QLabel(f"🔸 {subsection_title}")
-                subsection_header.setStyleSheet("""
-                    QLabel {
-                        background: rgba(255, 159, 28, 0.15);
-                        border-left: 3px solid #ff9f1c;
-                        color: #ff9f1c;
-                        font-weight: 600;
-                        font-size: 11px;
-                        letter-spacing: 0.5px;
-                        padding: 4px 8px;
-                        margin: 8px 0px 4px 0px;
-                        border-radius: 4px;
-                    }
-                """)
+                subsection_header.setStyleSheet(SUBSECTION_HEADER_NORMAL)
                 if subsection_description:
                     subsection_header.setToolTip(subsection_description)
                 
                 main_layout.addWidget(subsection_header)
                 
                 subsection_container = QtWidgets.QWidget()
-                subsection_container.setStyleSheet("""
-                    QWidget {
-                        background: rgba(255, 159, 28, 0.05);
-                        border: 1px solid rgba(255, 159, 28, 0.2);
-                        border-radius: 6px;
-                        padding: 8px;
-                        margin-left: 12px;
-                    }
-                """)
+                subsection_container.setStyleSheet(SUBSECTION_CONTAINER)
                 
                 current_subsection_layout = QtWidgets.QGridLayout(subsection_container)
                 current_subsection_layout.setContentsMargins(8, 8, 8, 8)
@@ -582,19 +529,7 @@ class ConfigTab(QtWidgets.QWidget):
                 subsection_description = field_data[3] if len(field_data) > 3 else None
                 
                 subsection_header = QtWidgets.QLabel(f"🔹 {subsection_title}")  # ← Icône différente
-                subsection_header.setStyleSheet("""
-                    QLabel {
-                        background: rgba(76, 175, 80, 0.15);         /* ← Vert au lieu de violet */
-                        border-left: 3px solid #4caf50;             /* ← Bordure verte */
-                        color: #4caf50;                             /* ← Texte vert */
-                        font-weight: 600;                           /* ← MÊME alignement */
-                        font-size: 11px;                            /* ← MÊME alignement */
-                        letter-spacing: 0.5px;                      /* ← MÊME alignement */
-                        padding: 4px 8px;                           /* ← MÊME alignement */
-                        margin: 8px 0px 4px 0px;                    /* ← MÊME alignement */
-                        border-radius: 4px;                         /* ← MÊME alignement */
-                    }
-                """)
+                subsection_header.setStyleSheet(SUBSECTION_HEADER_ALT)
                 if subsection_description:
                     subsection_header.setToolTip(subsection_description)
                 
@@ -602,15 +537,7 @@ class ConfigTab(QtWidgets.QWidget):
                 
                 # ✅ MÊME conteneur que subsection normale
                 subsection_container = QtWidgets.QWidget()
-                subsection_container.setStyleSheet("""
-                    QWidget {
-                        background: rgba(76, 175, 80, 0.05);         /* ← Fond vert léger */
-                        border: 1px solid rgba(76, 175, 80, 0.2);    /* ← Bordure verte */
-                        border-radius: 6px;                         /* ← MÊME alignement */
-                        padding: 8px;                               /* ← MÊME alignement */
-                        margin-left: 12px;                          /* ← MÊME alignement */
-                    }
-                """)
+                subsection_container.setStyleSheet(SUBSECTION_CONTAINER_ALT)
                 
                 current_subsection_layout = QtWidgets.QGridLayout(subsection_container)
                 current_subsection_layout.setContentsMargins(8, 8, 8, 8)  # ← MÊME alignement
@@ -671,16 +598,7 @@ class ConfigTab(QtWidgets.QWidget):
 
             # Style des labels
             if label and description:
-                label.setStyleSheet("""
-                    QLabel {
-                        color: #e6e6e6;
-                        font-weight: 600;
-                        font-size: 13px;
-                    }
-                    QLabel:hover {
-                        color: #ff9f1c;
-                    }
-                """)
+                label.setStyleSheet(FIELD_LABEL)
                 label.setToolTip(description)
 
             # Ajouter au layout
@@ -737,82 +655,7 @@ class ConfigTab(QtWidgets.QWidget):
         
         button = QtWidgets.QPushButton(text)
         
-        # Styles compacts
-        button_styles = {
-            "primary": """
-                QPushButton {
-                    background: #00d1ff;
-                    border: 2px solid #00d1ff;
-                    border-radius: 4px;
-                    color: black;
-                    font-weight: 700;
-                    font-size: 11px;
-                    padding: 4px 8px;
-                    min-width: 60px;
-                    max-height: 28px;
-                }
-                QPushButton:hover {
-                    background: #33d9ff;
-                    border-color: #33d9ff;
-                }
-                QPushButton:pressed {
-                    background: #00a8cc;
-                }
-            """,
-            "secondary": """
-                QPushButton {
-                    background: #ff9f1c;
-                    border: 2px solid #ff9f1c;
-                    border-radius: 4px;
-                    color: black;
-                    font-weight: 700;
-                    font-size: 11px;
-                    padding: 4px 8px;
-                    min-width: 60px;
-                    max-height: 28px;
-                }
-                QPushButton:hover {
-                    background: #ffb347;
-                }
-                QPushButton:pressed {
-                    background: #e8890b;
-                }
-            """,
-            "success": """
-                QPushButton {
-                    background: #00cc00;
-                    border: 2px solid #00cc00;
-                    border-radius: 4px;
-                    color: black;
-                    font-weight: 700;
-                    font-size: 11px;
-                    padding: 4px 8px;
-                    min-width: 60px;
-                    max-height: 28px;
-                }
-                QPushButton:hover {
-                    background: #33dd33;
-                }
-            """,
-            "danger": """
-                QPushButton {
-                    background: #ff4444;
-                    border: 2px solid #ff4444;
-                    border-radius: 4px;
-                    color: white;
-                    font-weight: 700;
-                    font-size: 11px;
-                    padding: 4px 8px;
-                    min-width: 60px;
-                    max-height: 28px;
-                }
-                QPushButton:hover {
-                    background: #ff6666;
-                }
-            """
-        }
-        
-        button.setStyleSheet(button_styles.get(style, button_styles["primary"]))
+        button.setStyleSheet(BUTTON_STYLES.get(style, BUTTON_STYLES["primary"]))
         
         if tooltip:
             button.setToolTip(tooltip)
@@ -882,60 +725,7 @@ class ConfigTab(QtWidgets.QWidget):
         
         combo.currentTextChanged.connect(on_combo_changed)
         
-        combo.setStyleSheet("""
-            QComboBox {
-                background: #0b0f17;
-                border: 2px solid #00d1ff;
-                padding: 6px 10px;
-                border-radius: 8px;
-                font-weight: 600;
-                color: #e6e6e6;
-                min-height: 16px;
-            }
-            QComboBox:hover {
-                background: #1a1f2e;
-                border-color: #ff9f1c;
-            }
-            QComboBox::drop-down {
-                subcontrol-origin: padding;
-                subcontrol-position: top right;
-                width: 18px;
-                border-left: 2px solid #00d1ff;
-                border-top-right-radius: 6px;
-                border-bottom-right-radius: 6px;
-                background: #ff9f1c;
-            }
-            QComboBox::down-arrow {
-                image: none;
-                border-left: 3px solid transparent;
-                border-right: 3px solid transparent;
-                border-top: 5px solid black;
-                margin: 2px;
-            }
-            QComboBox QAbstractItemView {
-                background: #0b0f17;
-                border: 2px solid #00d1ff;
-                border-radius: 6px;
-                selection-background-color: #ff9f1c;
-                selection-color: black;
-                color: #e6e6e6;
-                padding: 2px;
-            }
-            QComboBox QAbstractItemView::item {
-                background: transparent;
-                padding: 6px 10px;
-                border-radius: 4px;
-                margin: 1px;
-            }
-            QComboBox QAbstractItemView::item:hover {
-                background: rgba(255,159,28,0.3);
-                color: white;
-            }
-            QComboBox QAbstractItemView::item:selected {
-                background: #ff9f1c;
-                color: black;
-            }
-        """)
+        combo.setStyleSheet(COMBOBOX_STYLE)
         return combo
 
     def _get_combo_value(self, combo_widget):
@@ -1025,40 +815,7 @@ class ConfigTab(QtWidgets.QWidget):
         slider.setOrientation(QtCore.Qt.Orientation.Horizontal)  # ← AJOUTER
 
         # ✅ Style du slider (reste inchangé)
-        slider.setStyleSheet("""
-            QSlider::groove:horizontal {
-                border: 1px solid #999999;
-                height: 8px;
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #1e1e1e, stop:1 #3e3e3e);
-                margin: 2px 0;
-                border-radius: 4px;
-            }
-            QSlider::handle:horizontal {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #00d1ff, stop:1 #0099cc);
-                border: 1px solid #5c5c5c;
-                width: 18px;
-                margin: -2px 0;
-                border-radius: 9px;
-            }
-            QSlider::handle:horizontal:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #33d9ff, stop:1 #00b3e6);
-            }
-            QSlider::handle:horizontal:pressed {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #ff9f1c, stop:1 #e8890b);
-            }
-            QSlider::sub-page:horizontal {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #00d1ff, stop:1 #0099cc);
-                border: 1px solid #777;
-                height: 10px;
-                border-radius: 4px;
-            }
-            QSlider::add-page:horizontal {
-                background: #404040;
-                border: 1px solid #777;
-                height: 10px;
-                border-radius: 4px;
-            }
-        """)
+        slider.setStyleSheet(SLIDER_CUSTOM)
         
         # Conversion sécurisée de la valeur
         try:
@@ -1076,16 +833,7 @@ class ConfigTab(QtWidgets.QWidget):
         value_label.setMaximumWidth(70)
         value_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         
-        value_label.setStyleSheet("""
-            QLabel {
-                background: rgba(255,255,255,0.1);
-                border: 1px solid rgba(0,209,255,0.3);
-                border-radius: 4px;
-                padding: 2px 4px;
-                font-weight: 600;
-                font-size: 11px;
-            }
-        """)
+        value_label.setStyleSheet(VALUE_LABEL)
         
         def update_label_with_style(internal_value):
             # ✅ FIX: Utiliser get_real_value pour les décimales
@@ -1242,20 +990,7 @@ class ConfigTab(QtWidgets.QWidget):
         browse_btn = QtWidgets.QPushButton("📁")
         browse_btn.setMaximumWidth(40)
         browse_btn.setToolTip("Parcourir les dossiers")
-        browse_btn.setStyleSheet("""
-            QPushButton {
-                background: #ff9f1c;
-                border: 2px solid #ff9f1c;
-                border-radius: 6px;
-                color: black;
-                font-weight: 700;
-                font-size: 14px;
-                padding: 4px;
-            }
-            QPushButton:hover {
-                background: #ffb347;
-            }
-        """)
+        browse_btn.setStyleSheet(BROWSE_BUTTON)
         
         def open_folder_dialog():
             dialog = QtWidgets.QFileDialog()
@@ -1277,18 +1012,18 @@ class ConfigTab(QtWidgets.QWidget):
         
         browse_btn.clicked.connect(open_folder_dialog)
         
-    # ✅ NOUVEAU: Auto-save pour folder
-    def setup_auto_save(widget_container, config_key):
-        path_widget = widget_container._path_field
+        # ✅ FIX: Auto-save corrigé avec bonne indentation
+        def setup_auto_save(widget_container, config_key):
+            path_widget = widget_container._path_field
             
-    def on_path_changed():
-        path_value = path_widget.text()
-        self.auto_saver.save_immediate(config_key, path_value)
+            def on_path_changed():  # ← BIEN INDENTÉ dans setup_auto_save
+                path_value = path_widget.text()
+                self.auto_saver.save_immediate(config_key, path_value)
             
-        path_widget.editingFinished.connect(on_path_changed)
-        
-        container._setup_auto_save = setup_auto_save
-        
+            path_widget.editingFinished.connect(on_path_changed)  # ← BIEN INDENTÉ
+    
+        container._setup_auto_save = setup_auto_save  # ← BIEN INDENTÉ
+    
         layout.addWidget(path_field, 1)
         layout.addWidget(browse_btn)
         

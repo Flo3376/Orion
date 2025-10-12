@@ -19,17 +19,6 @@ BLOCKSIZE = 1024
 DTYPE = 'float32'
 
 
-"""def list_input_devices() -> List[Tuple[int, str]]:
-   
-    devices = sd.query_devices()
-    hostapis = sd.query_hostapis()
-    items = []
-    for idx, dev in enumerate(devices):
-        if dev.get('max_input_channels', 0) > 0:
-            host = hostapis[dev['hostapi']]['name']
-            label = f"[{host}] {dev['name']} (in:{dev['max_input_channels']})"
-            items.append((idx, label))
-    return items"""
 def list_input_devices() -> List[Tuple[int, str]]:
     """Return WASAPI devices only (modern Windows audio API)."""
     devices = sd.query_devices()

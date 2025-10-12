@@ -18,6 +18,9 @@ from core.bus import EventBus
 from core.vocalizer import Vocalizer
 from core.sound.fx_event_handler import init_fx_event_handler
 from core.lexique.manager import get_lexique_manager
+import queue  # Pour les exceptions queue.Empty
+import signal
+import sys
 
 # ✅ Variables globales
 bus = EventBus()
@@ -220,13 +223,42 @@ def start_listen_manager_async():
         traceback.print_exc()
 
 def main():
-    global config, sm  # ✅ Déclarer les variables globales
+    global config, sm
     
     print("🚀 Démarrage d'Orion...")
     
     # Créer l'application Qt
     app = QtWidgets.QApplication([])
-
+    
+    # ✅ NOUVEAU : Gestionnaire de signal pour Ctrl+C
+    def signal_handler(sig, frame):
+        print("\n🛑 Interruption détectée (Ctrl+C)")
+        print("🔄 Arrêt en cours...")
+        
+        # Arrêter proprement les composants
+        try:
+            if sm:
+                print("🔊 Arrêt SoundManager...")
+                sm.stop_all()
+            
+            print("🚪 Fermeture application...")
+            app.quit()  # Fermer l'application Qt
+            
+        except Exception as e:
+            print(f"⚠️ Erreur lors de l'arrêt: {e}")
+        
+        print("👋 Au revoir !")
+        sys.exit(0)
+    
+    # ✅ INSTALLER le gestionnaire de signal
+    signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
+    signal.signal(signal.SIGTERM, signal_handler)  # Termination
+    
+    # ✅ IMPORTANT : Timer pour traiter les signaux dans Qt
+    timer = QtCore.QTimer()
+    timer.start(100)  # Vérifier les signaux toutes les 100ms
+    timer.timeout.connect(lambda: None)  # Permet à Python de traiter les signaux
+    
     # ✅ Créer le gestionnaire de configuration et l'assigner à la variable globale
     config = get_config_manager(bus)
     
@@ -321,7 +353,13 @@ def main():
 
     # ✅ Boucle principale Qt
     print("🚀 Interface lancée - Listen manager en cours de démarrage...")
-    exit_code = app.exec()
+    print("💡 Utilisez Ctrl+C pour arrêter l'application")
+    
+    try:
+        exit_code = app.exec()
+    except KeyboardInterrupt:
+        print("\n🛑 Interruption clavier détectée")
+        signal_handler(signal.SIGINT, None)
     
     print("Au revoir !")
     exit(exit_code)
