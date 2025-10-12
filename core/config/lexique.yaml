@@ -1,0 +1,1309 @@
+global:
+  version: '1.0'
+  lang: fr-FR
+  mode: voice
+  xmlns: http://www.w3.org/2001/06/grammar
+  tag-format: semantics/1.0
+  name: Swan
+test_swan:
+  root: test_swan
+  cat: swan
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: test_swan
+      description: Test , est tu là
+      questions:
+        - 'Es-tu là '
+        - tu es là
+        - 'Peux-tu m''aider '
+        - 'Es-tu disponible '
+        - 'Tu es prêt '
+        - Est-ce que tu fonctionnes
+      responses:
+        - Oui, je suis là.
+        - Je suis prêt à aider.
+        - À votre service.
+        - Tout fonctionne, je suis prêt.
+        - Toujours là pour vous.
+      interact:
+        output: none
+test_swan_2:
+  root: test_swan_2
+  cat: swan
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: test_swan_2
+      description: Test, comment tu vas
+      questions:
+        - 'Comment vas-tu '
+        - comment tu vas
+        - 'Tu te portes bien '
+        - 'Ça va '
+        - 'Tout va bien pour toi '
+        - Es-tu en forme
+      responses:
+        - Oui, je vais très bien, merci !
+        - Tout va bien de mon côté, et toi ?
+        - Je suis en pleine forme, merci de demander.
+        - Ça va bien, et j'espère que toi aussi.
+        - Oui, tout est parfait ici !
+        - Je me porte bien, merci.
+        - Ça va super, merci !
+        - Je suis en bonne santé et heureux.
+        - Tout est en ordre, merci.
+        - Je vais bien, merci de t'en soucier.
+      interact:
+        type: none
+        action_input: ''
+gear_up:
+  root: gear_up
+  cat: ship
+  player: Spotify
+  effect: Vaisseaux
+  rules:
+    - action: gear_up
+      description: Rentrer les trains
+      questions:
+        - rentre les trains
+        - rétracte le train d'atterrissage
+        - on rentre les trains
+        - lève les trains
+        - rentre le train
+      responses:
+        - Trains en rétraction
+        - Je rétracte les trains
+        - Rentrée des trains en cours
+        - Les trains sont en train de rentrer
+        - Trains rétractés
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{N}'
+gear_down:
+  root: gear_down
+  cat: ship
+  rules:
+    - action: gear_down
+      description: Sortir les trains
+      questions:
+        - sors les trains
+        - ouvre les trains
+        - déploie les trains d'atterrissage
+        - on sort les trains
+        - abaisse les trains
+        - déploie le train
+      responses:
+        - Trains en déploiement
+        - Je déploie les trains
+        - Sortie des trains en cours
+        - Les trains sont en train de se déployer
+        - Trains sortis
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{N}'
+call_station_enter:
+  root: call_station_enter
+  cat: interact
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: call_station_enter
+      description: Contact station atterrir
+      questions:
+        - contacte la station pour atterrir
+        - appelle la station pour atterrir
+        - demande l'autorisation d'atterrir
+        - on arrive contacte la station
+        - appelle la station pour atterrissage
+        - demande à la station qu'on puisse atterrir
+      responses:
+        - Contact avec la station en cours
+        - Demande d'atterrissage envoyée
+        - J'appelle la station pour atterrir
+        - Autorisation d'atterrissage demandée
+        - Station contactée pour atterrissage
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{F3}'
+call_station_exit:
+  root: call_station_exit
+  cat: interact
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: call_station_exit
+      description: Contacte station décoller
+      questions:
+        - contacte la station pour décoller
+        - appelle la station pour décoller
+        - demande l'autorisation de décoller
+        - on y va appelle la station
+        - appelle la station pour décollage
+        - demande à la station qu'on puisse partir
+      responses:
+        - Contact avec la station en cours
+        - Demande de décollage envoyée
+        - J'appelle la station pour décoller
+        - Autorisation de décollage demandée
+        - Station contactée pour départ
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{F3}'
+leave_post:
+  root: leave_post
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: leave_post
+      description: Quitter la passerelle
+      questions:
+        - je te laisse les commandes
+        - je quitte la passerelle
+        - prends le contrôle je sors
+        - gère tout je quitte le poste
+        - je te confie les commandes
+        - A toi les commandes
+      responses:
+        - Commandes sécurisées, vous pouvez partir. N'oubliez pas votre casque
+        - Poste sécurisé, a plus tard. Prenez un casque au cas où.
+        - Je prends le relais. Pensez à votre casque
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{long}{Y}'
+door_open:
+  root: door_open
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: door_open
+      description: Ouvrir les portes du vaisseau.
+      questions:
+        - ouvres les portes
+        - ''
+      responses:
+        - Portes en ouverture
+        - J'ouvre les portes
+        - Ouverture des portes en cours
+        - Les portes s'ouvrent
+        - Portes ouvertes
+      interact:
+        type: combo
+        action_input: '{Degree}'
+door_close:
+  root: door_close
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: door_close
+      description: Fermer les portes du vaisseau.
+      questions:
+        - fermes les portes
+        - ''
+      responses:
+        - Portes en fermeture
+        - Je ferme les portes
+        - Fermeture des portes en cours
+        - Les portes se ferment
+        - Portes fermées
+      interact:
+        type: combo
+        action_input: '{Plus}'
+ready_to_fly:
+  root: ready_to_fly
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: ready_to_fly
+      description: Prépare le vaisseau
+      questions:
+        - prépare le vol
+        - active tous les systèmes de vol
+        - on se prépare à voler
+        - prépare le vaisseau pour le décollage
+        - lance la préparation au vol
+        - on y va
+        - démarre le vaisseau
+      responses:
+        - Tous les systèmes de vol sont en cours d'activation.
+        - Préparation au vol complétée, prêt à décoller.
+        - Systèmes vérifiés et opérationnels, prêt pour le vol.
+        - Systèmes de vol activés
+        - Préparation au vol en cours
+        - Tous les systèmes sont prêts
+        - Prêt à décoller
+        - Vaisseau prêt pour le vol
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{Right_Alt}{R}'
+quantum_jump_start:
+  root: quantum_jump_start
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: quantum_jump_start
+      description: lance le saut quantique
+      questions:
+        - Peux-tu initier le saut quantique
+        - Lance le saut quantique
+        - Lance le saut
+        - Active le saut quantique
+      responses:
+        - Initiation du saut quantique en cours.
+        - Saut quantique activé, accrochez-vous.
+      interact:
+        type: combo
+        action_input: '{long}{Left_click}'
+quantum_jump_stop:
+  root: quantum_jump_stop
+  cat: other
+  rules:
+    - action: quantum_jump_stop
+      description: coupe le saut quantique
+      questions:
+        - Arrête le saut quantique
+        - Arrête le saut
+        - Coupe le saut
+        - Coupe le saut quantique maintenant
+        - Désactive le saut quantique
+        - Stoppe le saut quantique immédiatement
+      responses:
+        - Saut quantique arrêté.
+        - Le saut quantique est maintenant désactivé.
+        - Arrêt du saut quantique confirmé.
+        - On a oublie quelque chose?
+      interact:
+        output: mouse
+        type: combo
+        action_input: '{Left_click}'
+nav_mod:
+  root: nav_mod
+  cat: ship
+  rules:
+    - action: nav_mod
+      description: passe sur le master mod navigation
+      questions:
+        - Peux-tu passer en mode navigation
+        - Active le mode navigation
+        - Bascule en mode navigation
+        - Passe en mode navigation
+      responses:
+        - Mode navigation activé.
+        - Nous sommes maintenant en mode navigation.
+        - ok je passe en mod navigation
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{Right_Shift}{Ù}'
+combat_mod:
+  root: combat_mod
+  cat: ship
+  rules:
+    - action: combat_mod
+      description: passe sur le master mod combat
+      questions:
+        - Peux-tu passer en mode combat
+        - Active le mode combat
+        - Bascule en mode combat
+        - Passe en mode combat
+      responses:
+        - Mode combat activé.
+        - Nous sommes maintenant en mode combat.
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{Right_shift}{Asterisk}'
+system_restart:
+  root: system_restart
+  cat: swan
+  rules:
+    - action: system_restart
+      description: system_restart
+      questions:
+        - Peux-tu redémarrer
+        - Redémarre l'assistant
+        - Relance l'assistant
+        - Est-il possible de redémarrer
+      responses:
+        - Redémarrage de l'assistant en cours.
+        - Je redémarre, à tout de suite.
+      interact:
+        output: none
+starmap_close:
+  root: starmap_close
+  cat: pilotage
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: starmap_close
+      description: ferme la starmap
+      questions:
+        - masque la carte
+        - ferme la carte
+        - ferme la starmap
+        - masque la starmap
+      responses:
+        - Ok.
+        - d'accord.
+        - fermeture
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{F2}'
+starmap_open:
+  root: starmap_open
+  cat: pilotage
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: starmap_open
+      description: ouvre la starmap
+      questions:
+        - affiche la carte
+        - ouvre la carte
+        - ouvre la starmap
+        - affiche la starmap
+      responses:
+        - Ok.
+        - d'accord.
+        - ouverture
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{F2}'
+accept_invite_mission:
+  root: accept_invite_mission
+  cat: interact
+  rules:
+    - action: accept_invite_mission
+      description: accepte mission / invitation
+      questions:
+        - Accepte l'invitation
+        - Accepte la Mission
+      responses:
+        - Accepter.
+        - d'accord.
+        - ok.
+        - c'est fait
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{Caret}'
+reject_invit_mission:
+  root: reject_invit_mission
+  cat: interact
+  rules:
+    - action: reject_invit_mission
+      description: refuser mission / invitation
+      questions:
+        - refuse la mission
+        - refuse l'invitation
+      responses:
+        - refuser.
+        - d'accord.
+        - ok.
+        - c'est fait
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{Dollar}'
+hello_world:
+  root: hello_world
+  cat: interact
+  rules:
+    - action: hello_world
+      description: dire bonjour sur le tchat
+      questions:
+        - Dis bonjour à l'univers
+      responses:
+        - ok
+        - 'd''accord, '
+        - j'envoie le message
+        - message envoyé
+      interact:
+        output: keyboard
+        type: phrase
+        action_input: >-
+          {Enter}Salut tous le monde, Bob est de retour. Hello everyone, Bob is
+          back{Enter}
+silent_mod:
+  root: silent_mod
+  cat: swan
+  rules:
+    - action: silent_mod
+      description: Désactivation de Swan
+      questions:
+        - désactive-toi
+        - passe en mode silencieux
+        - mets-toi en veille
+        - éteins-toi
+        - repose-toi
+      responses:
+        - Désactivation en cours
+        - Mode silencieux activé
+        - Je me mets en veille
+        - Je m'éteins, à plus tard
+        - Repos activé
+      interact:
+        output: none
+present_mod:
+  root: present_mod
+  cat: swan
+  rules:
+    - action: present_mod
+      description: Réactiver Swan
+      questions:
+        - réactive-toi
+        - sors du mode silencieux
+        - réveille-toi
+        - rallume-toi
+        - active-toi
+      responses:
+        - Réactivation en cours
+        - Me voilà de retour
+        - Je suis à nouveau actif
+        - Je me rallume, prêt à aider
+        - Activation terminée, je suis prêt
+      interact:
+        output: none
+open_salvage_tools:
+  root: open_salvage_tools
+  cat: sm
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: open_salvage_tools
+      description: ouvrir les outils de salvage
+      questions:
+        - ouvre les outils de salvage
+        - sort les bras
+        - ouvre les bras
+        - ouvre  les bras de salvage
+        - déploie les bras de salvage
+        - active les outils de récupération
+        - lance le déploiement des bras de salvage
+        - prépare les bras de salvage
+      responses:
+        - Outils de salvage déployés
+        - Bras de salvage en cours de déploiement
+        - Outils de récupération activés
+        - Déploiement des bras de salvage en cours
+        - Bras de salvage prêts
+      interact:
+        type: combo
+        action_input: '{Comma}'
+start_tools:
+  root: start_tools
+  cat: sm
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: start_tools
+      description: Activer le laser
+      questions:
+        - active le laser
+        - 'lance le laser '
+        - démarre le laser en cours
+        - allume le laser
+        - mets en route le laser de l'outil
+      responses:
+        - Laser activé
+        - Laser en cours d'activation
+        - Le laser est en marche
+        - Laser allumé
+        - Laser de l'outil en route
+        - Allumage du laser
+      interact:
+        type: combo
+        action_input: '{Left_click}'
+stop_tools:
+  root: stop_tools
+  cat: sm
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: stop_tools
+      description: Coupe le laser
+      questions:
+        - désactive le laser
+        - coupe le laser
+        - 'arrête le laser '
+        - éteins le laser
+        - mets hors service le laser de l'outil
+      responses:
+        - Laser désactivé
+        - Coupure du laser
+        - Laser en cours d'arrêt
+        - Le laser est éteint
+        - Laser coupé
+        - Laser de l'outil hors service
+      interact:
+        type: combo
+        action_input: '{Left_click}'
+close_salvage_tools:
+  root: close_salvage_tools
+  cat: sm
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: close_salvage_tools
+      description: Rétracter ou rentrer les bras
+      questions:
+        - rentre les outils
+        - rentre les bras
+        - rétracte les bras
+        - referme les outils de salvage
+        - désactive les bras de minage
+        - replie les outils
+      responses:
+        - Outils rentrés
+        - Bras rétractés
+        - Les outils sont repliés
+        - Rétraction des bras en cours
+        - Outils repliés
+      interact:
+        type: combo
+        action_input: '{Comma}'
+quiet_fly_music:
+  root: quiet_fly_music
+  cat: music
+  ambiance:
+    player: Spotify
+    track: >-
+      https://open.spotify.com/playlist/3GD8g6UxfHS40p2JjRnmn8?si=705576d4a3814805
+  effect: none
+  rules:
+    - action: quiet_fly_music
+      description: music calme
+      questions:
+        - on va se promener
+        - met une music calme
+      responses:
+        - d'accord
+        - ok
+        - pas de soucis
+      interact:
+        output: none
+music_combat:
+  root: music_combat
+  cat: music
+  ambiance:
+    player: Spotify
+    track: >-
+      https://open.spotify.com/intl-fr/track/0C80GCp0mMuBzLf3EAXqxv?si=2e7d081276c649d1
+  effect: none
+  rules:
+    - action: music_combat
+      description: music_combat
+      questions:
+        - on part au combat
+      responses:
+        - Bonne  chance
+        - Que la force soit avec vous
+        - D'accord
+        - Ok
+      interact:
+        output: none
+music_country:
+  root: music_country
+  cat: music
+  ambiance:
+    player: Spotify
+    track: >-
+      https://open.spotify.com/intl-fr/album/0MdmHmkEQPgtwUSZHFzsdw?si=4sealNybR-mFSRVqnlXjZQ
+  effect: none
+  rules:
+    - action: music_country
+      description: music country
+      questions:
+        - Mets moi de la country
+      responses:
+        - ok
+        - d'accord
+        - je m'en occupe
+      interact:
+        output: none
+my_playlist:
+  root: my_playlist
+  cat: music
+  ambiance:
+    player: Spotify
+    track: >-
+      https://open.spotify.com/playlist/6X39Diwe81ZITquddrnUQ5?si=780dd9b48e314c70
+  effect: none
+  rules:
+    - action: my_playlist
+      description: ma playlist Spotify
+      questions:
+        - lances ma playlist
+        - mets ma playlist
+      responses:
+        - d'accord
+        - ok
+        - je m'en occupe
+        - je suis obligé?
+      interact:
+        output: none
+test_output:
+  root: test_output
+  cat: swan
+  ambiance:
+    player: none
+    track: ''
+  effect: mobyglass
+  rules:
+    - action: test_output
+      description: test des effets audio
+      questions:
+        - lance le test
+      responses:
+        - bonjour, je suis Swan et vous m'entendez avec un effet audio
+      interact:
+        output: none
+light_ship:
+  root: light_ship
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: light_ship
+      description: Allumage des pahres du vaisseau
+      questions:
+        - Allume les feu
+        - on y vois rien
+        - fait tout noir
+      responses:
+        - Allumage des feux
+        - Activation des feux
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{L}'
+swan_minus:
+  root: swan_minus
+  cat: swan
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: swan_minus
+      description: réduction du son de swan
+      questions:
+        - Baisse ton volume
+      responses:
+        - ok
+      interact:
+        output: none
+swan_plus:
+  root: swan_plus
+  cat: swan
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: swan_plus
+      description: Augmentationdu son de swan
+      questions:
+        - Augmente ton volume
+      responses:
+        - ok
+      interact:
+        output: none
+test_musique:
+  root: test_musique
+  cat: music
+  ambiance:
+    player: Local
+    track: >-
+      "F:\Desktop\sfx atho\Atho Classic-Rocks\Brown Sugar (2009 Remaster).mp3"
+
+      "F:\Desktop\sfx atho\Atho Classic-Rocks\Creedence Clearwater Revival - Bad
+      Moon Rising (Official Lyric Video).mp3"
+
+      "F:\Desktop\sfx atho\Atho Classic-Rocks\David Bowie - Rebel Rebel
+      (Original Mix) [Official Audio].mp3"
+
+      "F:\Desktop\sfx atho\Atho Classic-Rocks\George Harrison - Got My Mind Set
+      On You (Version II).mp3"
+  effect: none
+  rules:
+    - action: test_musique
+      description: test de playlist local
+      questions:
+        - lance la nouvelle playlist
+      responses:
+        - ok.
+        - je m'en occupe.
+        - un instant.
+      interact:
+        output: none
+test4_swan:
+  root: test4_swan
+  cat: swan
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: test4_swan
+      description: encore un test
+      questions:
+        - comment tu vas ma grosse
+      responses:
+        - qu es ce que ça peut te foutre connard
+      interact:
+        type: combo
+        action_input: '{short}{F3}'
+music_gioli_asia:
+  root: music_gioli_asia
+  cat: music
+  ambiance:
+    player: Local
+    track: >
+      "I:\sav disque\disque g common 1\Music\gioli\Giolì & Assia - #DiesisLounge
+      @Episode01 [Handpan, Guitar, Piano] #stayhome.mp3"
+
+      "I:\sav disque\disque g common 1\Music\gioli\Giolì & Assia - #DiesisLounge
+      @Episode02 [Handpan, Guitar, Piano] #stayhome.mp3"
+
+      "I:\sav disque\disque g common 1\Music\gioli\Giolì & Assia - #DiesisLounge
+      @Episode03 [Handpan, Guitar, Piano] #stayhome.mp3"
+
+      "I:\sav disque\disque g common 1\Music\gioli\Giolì & Assia - #DiesisLounge
+      @Episode04 [Handpan, Guitar, Piano] #stayhome.mp3"
+
+      "I:\sav disque\disque g common 1\Music\gioli\Giolì & Assia - #DiesisLounge
+      @Episode05 [Handpan, Guitar, Piano] #stayhome.mp3"
+
+      "I:\sav disque\disque g common 1\Music\gioli\Giolì & Assia - #DiesisLounge
+      @Episode 06 _ Giolì's Birthday Edition .mp3"
+  effect: casque
+  rules:
+    - action: music_gioli_asia
+      description: lance les musique de gioli et asia
+      questions:
+        - met les albums de gioli et asia
+        - lance les albums de gioli et asia
+      responses:
+        - ok
+        - d'accord
+        - je m'en occupe
+        - un instant
+      interact:
+        output: none
+light_ship_off:
+  root: light_ship_off
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: light_ship_off
+      description: éteindre les feux
+      questions:
+        - coupe les feux
+        - éteint les feux
+      responses:
+        - ok
+        - extinction des feux
+        - ok j'éteint
+      interact:
+        output: keyboard
+        type: combo
+        action_input: '{L}'
+tools_change:
+  root: tools_change
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: tools_change
+      description: change l'oultils de minage/salvage
+      questions:
+        - change d'outils
+        - permute l'outils
+        - ''
+      responses:
+        - ok, je change l'outils
+        - c'est en cours
+        - changement en cours
+        - je m'occupe du changement d'outils
+      interact:
+        output: mouse
+        type: combo
+        action_input: '{Right_click}'
+r_display_4:
+  root: r_display_4
+  cat: other
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: r_display_4
+      description: affiche le display info ou la shard
+      questions:
+        - affiche les fps
+        - affiche la shard
+      responses:
+        - ok
+        - un instant
+        - un soucis?
+      interact:
+        output: keyboard
+        type: phrase
+        action_input: '{²}r_DisplayInfo 4{Enter}{²}'
+r_display_0:
+  root: r_display_0
+  cat: other
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: r_display_0
+      description: masque le display info ou shard
+      questions:
+        - masque les fps
+        - cache la shard
+      responses:
+        - ok
+        - un instant
+        - tout va bien?
+      interact:
+        output: keyboard
+        type: phrase
+        action_input: '{²}r_DisplayInfo 0{Enter}{²}'
+salvage_engage:
+  root: salvage_engage
+  cat: other
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: salvage_engage
+      description: mode combat puis ouverture bras
+      questions:
+        - on va commencer à recycler
+      responses:
+        - ok, je prépare le bras et la tête de recyclage
+        - d'accord je préprare le vaisseau
+      interact:
+        type: sequence
+        action_input: '{short}{Right_shift}{Asterisk}{tempo 1000}{long}{Comma}'
+shutdown_exit:
+  root: shutdown_exit
+  cat: other
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: shutdown_exit
+      description: on coupe le vaisseau et on sort du siége
+      questions:
+        - sois sage
+      responses:
+        - A plus tard.
+        - >-
+          Ok, mais vous avez pensez à faire le plein du vaisseau avant de
+          partir?
+      interact:
+        type: sequence
+        action_input: '{short}{i}{tempo 1000}{short}{u}{tempo 1000}{long}{y}'
+start_ship_takeoff:
+  root: start_ship_takeoff
+  cat: other
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: start_ship_takeoff
+      description: on démarre le vaisseau et on demande à décoller
+      questions:
+        - Prépare le décollage
+      responses:
+        - Ok, c'est repartie pour l'aventure.
+        - >-
+          Ok, mais vous avez pensez à faire le plein du vaisseau avant de
+          partir?
+      interact:
+        type: sequence
+        action_input: '{short}{Right_Alt}{R}{tempo 1000}{short}{l}{tempo 1000}{short}{F3}'
+little_jump:
+  root: little_jump
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: little_jump
+      description: faire un micro saut quantique
+      questions:
+        - micro saut
+        - lance un micro saut
+      responses:
+        - Et c'est partie pour un saut de puce
+      interact:
+        type: sequence
+        action_input: '{long}{Left_click}{tempo 1500}{long}{Left_click}'
+scan_start:
+  root: scan_start
+  cat: pilotage
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: scan_start
+      description: lance un ping de maniére répétitive
+      questions:
+        - balaye la zone
+      responses:
+        - que cherchons nous?
+      interact:
+        type: cyclique
+        action_input: '{short}{Tab}{tempo 3500}'
+scan_stop:
+  root: scan_stop
+  cat: pilotage
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: scan_stop
+      description: coupe le balayage
+      questions:
+        - stop le balayage
+      responses:
+        - Vous avez trouvez ce que vous voulez?
+      interact:
+        type: cyclique
+        action_input: ''
+mm_switch_to_spotify:
+  root: mm_switch_to_spotify
+  cat: music
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: mm_switch_to_spotify
+      description: indique que l'on passe sur spotify
+      questions:
+        - passe sur spotify
+      responses:
+        - Passage sur spotify
+      interact:
+        type: none
+        action_input: ''
+mm_switch_to_youtube:
+  root: mm_switch_to_youtube
+  cat: music
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: mm_switch_to_youtube
+      description: indique que l'on passe sur youtube
+      questions:
+        - passe sur youtube
+      responses:
+        - Passage sur youtube
+      interact:
+        type: none
+        action_input: ''
+mm_switch_to_deezzer:
+  root: mm_switch_to_deezzer
+  cat: music
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: mm_switch_to_deezzer
+      description: indique que l'on passe sur deeezer
+      questions:
+        - passe sur deeezer
+      responses:
+        - Passage sur deeezer
+      interact:
+        type: none
+        action_input: ''
+mm_switch_to_local:
+  root: mm_switch_to_local
+  cat: music
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: mm_switch_to_local
+      description: indique que l'on passe sur le lecteur mp3 interne
+      questions:
+        - passe sur le lecteur local
+      responses:
+        - Passage sur le lecteur mp3
+      interact:
+        type: none
+        action_input: ''
+mm_play:
+  root: mm_play
+  cat: music
+  rules:
+    - action: mm_play
+      description: mm_play
+      questions:
+        - Peux-tu démarrer la musique
+        - Mets de la musique
+        - Lance la lecture sur Spotify
+        - relance la musique
+        - Lance la musique
+      responses:
+        - Musique démarrée sur Spotify.
+        - Lecture en cours.
+      interact:
+        output: none
+mm_pause:
+  root: mm_pause
+  cat: music
+  rules:
+    - action: mm_pause
+      description: mm_pause
+      questions:
+        - Peux-tu mettre en pause
+        - Mets la musique en pause
+        - Pause la musique
+        - Met en pause
+        - coupe la musique
+      responses:
+        - Musique mise en pause.
+        - Pause activée.
+      interact:
+        output: none
+mm_next_track:
+  root: mm_next_track
+  cat: music
+  rules:
+    - action: mm_next_track
+      description: mm_next_track
+      questions:
+        - Peux-tu passer à la suivante
+        - Suivant sur Spotify
+        - Change de piste
+        - Musique suivante
+        - Morceau suivant
+      responses:
+        - Piste suivante jouée.
+        - Changement de piste effectué.
+      interact:
+        output: none
+mm_previous_track:
+  root: mm_previous_track
+  cat: music
+  rules:
+    - action: mm_previous_track
+      description: mm_previous_track
+      questions:
+        - Peux-tu passer à la précédente
+        - précédent sur Spotify
+        - Musique précédente
+        - morceaux précédent
+      responses:
+        - Piste précédente jouée.
+        - Changement de piste effectué.
+      interact:
+        output: none
+mm_increase_volume:
+  root: mm_increase_volume
+  cat: music
+  rules:
+    - action: mm_increase_volume
+      description: mm_increase_volume
+      questions:
+        - Augmente le volume
+        - Augmente la musique
+        - Augmente le son
+        - Plus fort s'il te plaît
+      responses:
+        - Volume augmenté.
+        - C'est maintenant plus fort.
+      interact:
+        output: none
+mm_decrease_volume:
+  root: mm_decrease_volume
+  cat: music
+  rules:
+    - action: mm_decrease_volume
+      description: mm_decrease_volume
+      questions:
+        - Baisse le volume
+        - Baisse la musique
+        - Baisse le son
+        - Moins fort s'il te plaît
+      responses:
+        - Volume diminué.
+        - C'est maintenant plus doux.
+      interact:
+        output: none
+decrease_power_weapon_start:
+  root: decrease_power_weapon_start
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: decrease_power_weapon_start
+      description: baisse l'énergie des armes
+      questions:
+        - test 85
+      responses:
+        - je diminue
+      interact:
+        type: cyclique
+        action_input: '{Right_alt}{F5}{tempo 2500}'
+decrease_power_weapon_stop:
+  root: decrease_power_weapon_stop
+  cat: ship
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: decrease_power_weapon_stop
+      description: stoppe la puissance sur les armes
+      questions:
+        - test 86
+      responses:
+        - ok
+      interact:
+        type: cyclique
+        action_input: ''
+buy_start:
+  root: buy_start
+  cat: other
+  ambiance:
+    player: none
+    track: ''
+  effect: casque
+  rules:
+    - action: buy_start
+      description: acheter au comptoir répétitive
+      questions:
+        - achète au comptoir
+      responses:
+        - on va se régaler
+        - ça va nous changer des conserve
+      interact:
+        type: cyclique
+        action_input: '{long 3000}{f}{tempo 1000}'
+buy_stop:
+  root: buy_stop
+  cat: other
+  ambiance:
+    player: none
+    track: ''
+  effect: none
+  rules:
+    - action: buy_stop
+      description: coupe les achats
+      questions:
+        - fin des achats
+      responses:
+        - Vous avez trouvez ce que vous vouliez?
+      interact:
+        type: cyclique
+        action_input: ''
+go_to_x:
+  root: go_to_x
+  cat: pilotage
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: go_to_x
+      description: allez vers un lieux
+      questions:
+        - on rentre {where}
+        - on retourne {where}
+        - prépare la route vers {where}
+      responses:
+        - d'accord je programme la route
+        - pas de soucis nous serons prêt dans quelque instant
+      interact:
+        type: none
+        action_input: ''
+mm_set_volume_x:
+  root: mm_set_volume_x
+  cat: music
+  ambiance:
+    player: none
+    track: ''
+  effect: vaisseau
+  rules:
+    - action: mm_set_volume_x
+      description: Gére le volume de la musique
+      questions:
+        - Met le volume à {x_0_100_5}
+        - Met le son à {x_0_100_5}
+      responses:
+        - d'accord
+        - ok
+      interact:
+        type: none
+        action_input: ''

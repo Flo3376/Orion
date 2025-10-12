@@ -1,0 +1,114 @@
+version:
+  ver: 1.3.2
+# info pour le module listen
+listen:
+    #debug pour listen
+  Debug: false
+    #language par défaut
+  Language: fr-FR
+    # Numéro du périphérique micro (voir --get_mic)
+  Microphone: 32
+  # Chemin vers les fichiers grammaires SRGS
+  Grammar: "./core/grammar/"
+  # Mot déclencheur (hotword) pour activer l'écoute
+  Hotword: 'Swan'
+  # Seuil de confiance pour le mode grammaire (0.0 à 1.0)
+  Confidence: 69
+
+# Info pour le module de capture mic
+mic:
+    # #répertoire de stockageg des sons de capturés
+  path_input: "/sound/input_mic_sound/"
+  debug_mic: false
+
+# Info pour l'utilisation d'OpenAI
+openAI:
+     # Clé API pour le service OpenAI
+  apiKey: ""
+    # assistant_id - ID de l'assistant
+  assistant_voice: "nova"
+    #répertoire de stockageg des sons de revoicer
+  path_output: "/sound/output_sound/openAI/"
+  # tts-1 (rapide) | tts-1-hd (qualité)
+  tts_model: "tts-1-hd"
+
+piper:
+  #info sur la sortie audio par piper
+  # Voix par défaut utilisée par le moteur TTS Piper
+  default_voice: "gilles"
+  #répertoire de stockageg des sons de piper
+  path_output: "./sound/output_sound/piper/"
+  #chemin du modèle piper
+  model_path: "./core/models_tts/piper/"
+
+edgetts:
+  #info sur la sortie audio par edge-tts
+  # Voix par défaut utilisée par le moteur TTS Edge-tts "fr-FR-DeniseNeural" "fr-FR-HenriNeural" "fr-FR-JosephineNeural" "fr-CA-AntoineNeural" "fr-BE-CharlineNeural"
+  default_voice: "fr-CH-ArianeNeural"
+  #répertoire de stockageg des sons de edge-tts
+  path_output: "./sound/output_sound/edge-tts/"
+  # Vitesse de la voix (valeurs possibles : -100 à 100)
+  rate: 0
+  # Ton de la voix (valeurs possibles : -100 à 100)
+  pitch: -14
+  # Volume de la voix (valeurs possibles : -100 à 100)
+  volume: 100
+
+spotify:
+  # Info pour l'API Spotify
+  # Pour obtenir vos propres identifiants, créez une application sur https://developer.spotify.com/dashboard/applications
+  # et configurez l'URI de redirection à http://localhost:8888/callback
+  # Ensuite, utilisez un outil comme Postman pour obtenir les tokens d'accès et de rafraîchissement.
+  # Assurez-vous que les scopes suivants sont inclus lors de la demande des tokens :  user-read-playback-state, user-modify-playback-state, user-read-currently-playing
+  # Vous pouvez utiliser le script Python fourni dans le répertoire scripts pour automatiser ce processus.
+  # N'oubliez pas de mettre à jour les tokens périodiquement, car ils peuvent expirer.
+  # Identifiants de l'application Spotify (obtenus depuis le tableau de bord des développeurs Spotify)  
+  clientId: ""
+  clientSecret: ""
+  client_acces_token: ""
+  client_refresh_token: ""
+  redirectUri: http://localhost:8888/callback
+  client_pref_device: ""
+  client_pref_device_name: ""
+  defaultvolume: 50
+
+default_mm_player: 'Spotify'
+
+sound_bank:
+  path_output: "/sound/output_sound/sound_bank/"
+
+#module de vocalisation "revoicer" payant / "openAI" payant / "google" inconnu (prochainement) / "sound_bank" lecture des son dans les répertoires
+vocalisation:
+  # Moteur vocal utilisé pour la synthèse vocale: "piper", "edgetts", "openAI", "revoicer", "azure", "sound_bank"
+  engine: "edgetts"
+  # Volume global de la synthèse vocale (0 à 100)
+  volume: "100"
+  #effet sur la voix "bocal"/"small_speaker"/"radio"/"telephone" /"none"
+  effect: "none"
+
+# Configuration des effets vocaux (skin + environment)
+effects:
+  # === COUCHE 1 : SKIN VOCAL (personnalité de la voix) ===
+  skin:
+    # Effets de base
+    pitch: 0              # -50 à +50 (changement de pitch en demi-tons)
+    speed: 0             # -50 à +50 (% de changement de vitesse)
+    highpass: 0      # ← NOUVEAU (remplace helium)
+    lowpass: 0       # ← NOUVEAU (remplace robotic)
+    # Effets de personnalité
+    metallic: 8.0        # 0-100 (résonance métallique)
+    distortion: 6.0      # 0-100 (saturation/clipping)
+    vocoder: 0           # 0-100 (synthétiseur vocal avec porteuse)
+    hash: 0              # 0-100 (dégradation digitale/bit crushing)
+    # Effets spatiaux de base
+    reverb: 1.0          # 0-100 (réverbération)
+    echo: 0              # 0-100 (écho/delay)
+    # Paramètres globaux du skin
+    dry_wet: 78.0           # 0-100 (% d'effet vs son original)
+    enable: true         # Active/désactive le skin vocal
+
+
+debug_sw: false
+
+interface:
+  transparency: 100
