@@ -113,3 +113,4 @@ release/
 .cache_spotify_controller
 /core/grammar
 core/config/config.yaml
+core/config/window_state.json
