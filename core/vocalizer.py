@@ -40,7 +40,7 @@ class Vocalizer:
         # Moteurs TTS disponibles
         self.engines = {
             "piper": PiperEngine(config_manager),
-            "openai": OpenAIEngine(config_manager),  # ✅ NOUVEAU
+            "openAI": OpenAIEngine(config_manager),  # ✅ NOUVEAU
             "edgetts": EdgeTTSEngine(config_manager),  # ✅ NOUVEAU
         }
         
@@ -871,9 +871,9 @@ class EdgeTTSEngine(BaseEngine):
         return {
             "pitch": self.config_manager.get("effects.skin.pitch", 0),
             "speed": self.config_manager.get("effects.skin.speed", 0),
-            "helium": self.config_manager.get("effects.skin.helium", 0),
+            "highpass": self.config_manager.get("effects.skin.highpass", 0),
             "metallic": self.config_manager.get("effects.skin.metallic", 0),
-            "robotic": self.config_manager.get("effects.skin.robotic", 0),
+            "lowpass": self.config_manager.get("effects.skin.lowpass", 0),
             "distortion": self.config_manager.get("effects.skin.distortion", 0),
             "vocoder": self.config_manager.get("effects.skin.vocoder", 0),
             "hash": self.config_manager.get("effects.skin.hash", 0),

@@ -170,7 +170,7 @@ class ConfigTab(QtWidgets.QWidget):
             ("Moteur Vocal", "combo", ["piper", "edgetts", "openAI"], 
              self._get_config_value("vocalisation.engine", "piper"),
              "Moteur TTS utilisé pour la synthèse vocale"),
-            ("Effet", "combo", ["none", "ship", "city", "helmet"], 
+            ("Effet", "combo", ["auto","none", "ship", "city", "helmet"], 
              self._get_config_value("vocalisation.effect", "none"),
              "Effet appliqué à la voix lors de la synthèse vocale"),
             # ✅ Subsection ALTERNATIVE (bleue)
@@ -1100,6 +1100,7 @@ class ConfigTab(QtWidgets.QWidget):
             
             # === EDGE TTS ===
             "Voix Edge": "edgetts.default_voice",
+            "Tonalité": "edgetts.pitch",                   # Tonalité Edge TTS  
             "Vitesse": "edgetts.rate",                  # Edge TTS vitesse
             # Note: "Tonalité" est mappé vers Skin Audio, pas Edge TTS
             # Si besoin d'un champ séparé pour Edge, renommer en "Tonalité Edge"
