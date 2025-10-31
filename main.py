@@ -78,6 +78,7 @@ def on_bus_message(msg):
     if name == "listen.main_listener" and state == "recognition":
         data = payload.get("data", {})
         print()
+        print(data)
         print(f"\n🎤 COMMANDE RECONNUE (COMPLET):")
         
         options = data.get("options", {})
