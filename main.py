@@ -76,6 +76,9 @@ def on_bus_message(msg):
 
     # Traitement spécial pour les reconnaissances vocales
     if name == "listen.main_listener" and state == "recognition":
+        if data.confidence < config.get("listen.Confidence", 0.5):
+            print("🎤 COMMANDE REJETÉE (confiance trop basse)")
+            return
         data = payload.get("data", {})
         print()
         print(data)
