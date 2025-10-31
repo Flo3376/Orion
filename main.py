@@ -87,7 +87,11 @@ def on_bus_message(msg):
         confidence_threshold = confidence_threshold_config / 100.0  # ex: 50 -> 0.5
         
         if confidence_received < confidence_threshold:
-            print("🎤 COMMANDE REJETÉE (confiance trop basse)")
+            # Extraire le nom de la commande pour le message de rejet
+            options = data.get("options", {})
+            action_detected = options.get("action", "commande_inconnue") if options else "commande_inconnue"
+            
+            print(f"🎤 COMMANDE REJETÉE '{action_detected}' (confiance trop basse)")
             print(f"💡 Confiance reçue: {confidence_received:.2f} ({confidence_received*100:.0f}%)")
             print(f"💡 Seuil requis: {confidence_threshold:.2f} ({confidence_threshold_config}%)")
             return
