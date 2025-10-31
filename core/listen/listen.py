@@ -6,8 +6,6 @@ Remplace le module listen.js Node.js
 import subprocess
 import threading
 import json
-import time
-import re
 from pathlib import Path
 from typing import Optional, Dict, Any, Callable
 from core.bus import EventBus, Message
@@ -25,11 +23,6 @@ class ListenManager:
         self.buffers: Dict[str, str] = {}
         self.running: Dict[str, bool] = {}
         self.DEBUG = DEBUG
-        
-        # === NOUVEAUX DEBUGS ===
-        self.stats = {}  # Statistiques par listen_id
-        self.last_recognition_time = {}  # Timestamp dernière reconnaissance
-        self.process_health = {}  # État de santé des processus
         
         # Chemin vers l'exécutable
         self.listen_exe = Path(__file__).parent.parent / "exe" / "listen" / "listen.exe"
@@ -57,10 +50,6 @@ class ListenManager:
     def start(self, listen_id: str, options: Dict[str, Any]) -> bool:
         """Démarre un processus listen.exe avec l'ID spécifié"""
         try:
-            # === DEBUG: INITIALISATION ===
-            print(f"🚀 [DEBUG] Démarrage de {listen_id}")
-            self._init_stats(listen_id)
-            
             # Arrêter le processus existant s'il y en a un
             self.stop(listen_id)
             
@@ -82,12 +71,10 @@ class ListenManager:
                 args.append('--recognizer=' + options['recognizer'])  
             if options.get('Hotword'):
                 args.append('--hotword=' + options['Hotword'])
-            
-            # === DEBUG: COMMANDE COMPLÈTE ===
-            print(f"🔧 [DEBUG] Command Line: {' '.join(args)}")        
-            
+            #afficher la ligne de commande complète en mode debug
+            if self.DEBUG:
+                print(f"@@@ Command Line: {' '.join(args)}")        
             # Lancer le processus
-            start_time = time.time()
             process = subprocess.Popen(
                 args,
                 stdout=subprocess.PIPE,
@@ -97,21 +84,9 @@ class ListenManager:
                 bufsize=0
             )
             
-            launch_time = time.time() - start_time
-            print(f"⏱️ [DEBUG] Processus lancé en {launch_time:.3f}s - PID: {process.pid}")
-            
             self.processes[listen_id] = process
             self.running[listen_id] = True
             self.buffers[listen_id] = ""
-            
-            # === DEBUG: HEALTH CHECK ===
-            self.process_health[listen_id] = {
-                "pid": process.pid,
-                "start_time": time.time(),
-                "restart_count": self.process_health.get(listen_id, {}).get("restart_count", 0),
-                "last_activity": time.time(),
-                "errors": 0
-            }
             
             if self.DEBUG:
                 print(f"@@@ Starting Process {listen_id} {process.pid}")
@@ -134,41 +109,26 @@ class ListenManager:
             self.threads[listen_id + "_stdout"] = stdout_thread
             self.threads[listen_id + "_stderr"] = stderr_thread
             
-            # === DEBUG: THREAD MONITORING ===
-            print(f"🧵 [DEBUG] Threads créés pour {listen_id}: stdout={stdout_thread.is_alive()}, stderr={stderr_thread.is_alive()}")
-            
-            self._publish_event(listen_id, "started", {
-                "pid": process.pid, 
-                "options": options,
-                "launch_time": launch_time,
-                "restart_count": self.process_health[listen_id]["restart_count"]
-            })
+            self._publish_event(listen_id, "started", {"pid": process.pid, "options": options})
             
             return True
             
         except Exception as e:
-            print(f"💥 [DEBUG] ERREUR démarrage {listen_id}: {str(e)}")
             self._publish_error(listen_id, f"Erreur démarrage: {str(e)}")
             return False
 
     def stop(self, listen_id: str) -> bool:
         """Arrête le processus spécifié"""
         try:
-            print(f"🛑 [DEBUG] Arrêt de {listen_id}")
-            
             self.running[listen_id] = False
             
             if listen_id in self.processes:
                 process = self.processes[listen_id]
                 if process and process.poll() is None:
-                    # === DEBUG: HEALTH CHECK AVANT ARRÊT ===
-                    uptime = time.time() - self.process_health.get(listen_id, {}).get("start_time", time.time())
-                    print(f"📊 [DEBUG] Uptime de {listen_id}: {uptime:.1f}s")
-                    print(f"📊 [DEBUG] Stats: {self.stats.get(listen_id, {})}")
-                    
                     process.terminate()
                     process.wait(timeout=5)
-                    print(f"✅ [DEBUG] Processus {listen_id} (PID: {process.pid}) terminé proprement")
+                    if self.DEBUG:
+                        print(f"@@@ Killing [{listen_id}] PID: {process.pid}")
                         
                 del self.processes[listen_id]
                 
@@ -176,24 +136,12 @@ class ListenManager:
             if listen_id in self.buffers:
                 del self.buffers[listen_id]
                 
-            # === DEBUG: THREAD CLEANUP ===
-            stdout_thread = self.threads.get(listen_id + "_stdout")
-            stderr_thread = self.threads.get(listen_id + "_stderr")
-            if stdout_thread:
-                print(f"🧵 [DEBUG] Thread stdout alive: {stdout_thread.is_alive()}")
-            if stderr_thread:
-                print(f"🧵 [DEBUG] Thread stderr alive: {stderr_thread.is_alive()}")
-                
             # Les threads daemon se termineront automatiquement
             
-            self._publish_event(listen_id, "stopped", {
-                "final_stats": self.stats.get(listen_id, {}),
-                "uptime": uptime if 'uptime' in locals() else 0
-            })
+            self._publish_event(listen_id, "stopped")
             return True
             
         except Exception as e:
-            print(f"💥 [DEBUG] ERREUR arrêt {listen_id}: {str(e)}")
             self._publish_error(listen_id, f"Erreur arrêt: {str(e)}")
             return False
 
@@ -210,57 +158,26 @@ class ListenManager:
     def _read_stdout(self, listen_id: str, process: subprocess.Popen, options: Dict[str, Any]):
         """Lit stdout en continu et extrait les JSON (comme handleBuffer dans le JS)"""
         try:
-            print(f"🔍 [DEBUG] Thread stdout démarré pour {listen_id}")
-            read_count = 0
-            
             while self.running.get(listen_id, False) and process.poll() is None:
-                # === DEBUG: PROCESS HEALTH CHECK ===
-                if read_count % 100 == 0:  # Check toutes les 100 lectures
-                    self._update_health(listen_id)
-                
                 data = process.stdout.read(1024)  # Lire par chunks
                 if data:
-                    read_count += 1
                     decoded_data = data.decode('utf-8', errors='ignore')
-                    
-                    # === DEBUG: DATA FLOW ===
-                    if read_count % 50 == 0:  # Log toutes les 50 lectures
-                        print(f"📡 [DEBUG] {listen_id} - Lecture #{read_count}, taille: {len(data)} bytes")
-                    
                     self._handle_buffer(listen_id, decoded_data, options)
                         
-            print(f"🔍 [DEBUG] Thread stdout terminé pour {listen_id} (lectures: {read_count})")
-                        
         except Exception as e:
-            print(f"💥 [DEBUG] ERREUR thread stdout {listen_id}: {str(e)}")
-            self._increment_error(listen_id)
             if self.running.get(listen_id, False):
                 self._publish_error(listen_id, f"Erreur lecture stdout: {str(e)}")
 
     def _read_stderr(self, listen_id: str, process: subprocess.Popen):
         """Lit stderr en continu pour le logging"""
         try:
-            print(f"🔍 [DEBUG] Thread stderr démarré pour {listen_id}")
-            error_count = 0
-            
             while self.running.get(listen_id, False) and process.poll() is None:
                 data = process.stderr.read(1024)
                 if data:
                     decoded_data = data.decode('utf-8', errors='ignore')
-                    
-                    # === DEBUG: ERROR TRACKING ===
-                    if "error" in decoded_data.lower() or "exception" in decoded_data.lower():
-                        error_count += 1
-                        print(f"⚠️ [DEBUG] Erreur détectée #{error_count} dans {listen_id}: {decoded_data[:100]}...")
-                        self._increment_error(listen_id)
-                    
                     self._handle_stderr_data(listen_id, decoded_data)
                         
-            print(f"🔍 [DEBUG] Thread stderr terminé pour {listen_id} (erreurs: {error_count})")
-                        
         except Exception as e:
-            print(f"💥 [DEBUG] ERREUR thread stderr {listen_id}: {str(e)}")
-            self._increment_error(listen_id)
             if self.running.get(listen_id, False):
                 self._publish_error(listen_id, f"Erreur lecture stderr: {str(e)}")
 
@@ -273,10 +190,6 @@ class ListenManager:
             
         self.buffers[listen_id] += data
         buffer = self.buffers[listen_id]
-        
-        # === DEBUG: BUFFER SIZE ===
-        if len(buffer) > 10000:  # Buffer trop gros = problème potentiel
-            print(f"⚠️ [DEBUG] Buffer très gros pour {listen_id}: {len(buffer)} chars")
         
         # Chercher les balises JSON (exactement comme dans le JS)
         end_pos = buffer.find('</JSON>')
@@ -291,34 +204,20 @@ class ListenManager:
         json_str = buffer[start_pos + 6:end_pos]
         self.buffers[listen_id] = buffer[end_pos + 7:]
         
-        # === DEBUG: JSON PROCESSING ===
-        print(f"🔍 [DEBUG] JSON extrait de {listen_id}: {len(json_str)} chars")
-        
         try:
             json_data = json.loads(json_str)
-            
-            # === DEBUG: ANALYSE FAUX POSITIFS ===
-            confidence = self._extract_confidence(json_data)
-            is_false_positive = self._analyze_false_positive(listen_id, json_data, confidence)
             
             if self.DEBUG:
                 print(f"[JSON REÇU] {json_data}")
             
-            # === DEBUG: STATISTICS ===
-            self._update_stats(listen_id, json_data, confidence, is_false_positive)
-            
             # Publier sur le bus (équivalent du callback dans le JS)
             self._publish_event(listen_id, "recognition", {
                 "data": json_data,
-                "options": options,
-                "confidence": confidence,
-                "is_false_positive": is_false_positive,
-                "stats": self.stats.get(listen_id, {})
+                "options": options
             })
             
         except json.JSONDecodeError as e:
-            print(f'💥 [DEBUG] Parsing Error dans {listen_id}: {e}, json: {json_str[:200]}...')
-            self._increment_error(listen_id)
+            print(f'Parsing Error: {e}, json: {json_str}')
 
     def _handle_stderr_data(self, listen_id: str, data: str):
         """Traite les données stderr avec filtrage (équivalent de stdErr du JS)"""
@@ -329,23 +228,11 @@ class ListenManager:
             if not line.strip():
                 continue
                 
-            # === DEBUG: CRASH DETECTION ===
-            crash_keywords = ["access violation", "segmentation fault", "crash", "fatal error", "exception"]
-            if any(keyword in line.lower() for keyword in crash_keywords):
-                print(f"💥 [DEBUG] CRASH DÉTECTÉ dans {listen_id}: {line}")
-                self._publish_event(listen_id, "crash_detected", {"message": line.strip()})
-                
             # Vérifier si la ligne doit être exclue (exactement comme dans le JS)
             should_exclude = any(excluded in line for excluded in self.excluded_messages)
             
             if not should_exclude:
                 self._log_colored_message(line)
-                
-                # === DEBUG: RECONNAISSANCE EVENTS ===
-                if "SpeechRecognized" in line:
-                    self._track_recognition_event(listen_id, line)
-                elif "SpeechHypothesized" in line:
-                    self._track_hypothesis_event(listen_id, line)
                 
                 # Publier les messages importants sur le bus SEULEMENT si DEBUG=True
                 if self.DEBUG and any(keyword in line for keyword in ["SpeechRecognized", "recognizer_SpeechHypothesized"]):
