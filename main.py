@@ -76,10 +76,23 @@ def on_bus_message(msg):
 
     # Traitement spécial pour les reconnaissances vocales
     if name == "listen.main_listener" and state == "recognition":
-        if data.confidence < config.get("listen.Confidence", 0.5):
-            print("🎤 COMMANDE REJETÉE (confiance trop basse)")
-            return
+        
         data = payload.get("data", {})
+        
+        # ✅ CORRECTION ÉCHELLE : Listen renvoie 0-1, config stocke 0-100
+        confidence_received = data.get("confidence", 0)  # 0-1 (ex: 0.85)
+        confidence_threshold_config = config.get("listen.Confidence", 50)  # 0-100 (ex: 50)
+        
+        # Convertir le seuil de config (0-100) vers l'échelle listen (0-1)
+        confidence_threshold = confidence_threshold_config / 100.0  # ex: 50 -> 0.5
+        
+        if confidence_received < confidence_threshold:
+            print("🎤 COMMANDE REJETÉE (confiance trop basse)")
+            print(f"💡 Confiance reçue: {confidence_received:.2f} ({confidence_received*100:.0f}%)")
+            print(f"💡 Seuil requis: {confidence_threshold:.2f} ({confidence_threshold_config}%)")
+            return
+        
+        print(f"✅ Confiance OK: {confidence_received:.2f} ({confidence_received*100:.0f}%) >= {confidence_threshold:.2f} ({confidence_threshold_config}%)")
         print()
         print(data)
         print(f"\n🎤 COMMANDE RECONNUE (COMPLET):")
