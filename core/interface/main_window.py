@@ -17,9 +17,11 @@ from .tabs.config_tab import ConfigTab  # ← NOUVEAU: Importer l'onglet Config
 class OrionMainWindow(QtWidgets.QMainWindow):
     """Fenêtre principale de l'interface Orion"""
     
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus, config_manager):
         super().__init__()
         self.event_bus = event_bus
+        self.config_manager = config_manager  # ✅ Stocker config_manager
+        
         self.setWindowTitle("ORION • INTERFACE • CONTROL")
         self.setFixedSize(1200, 800)  # Taille fixe pour commencer
         
@@ -111,23 +113,23 @@ class OrionMainWindow(QtWidgets.QMainWindow):
         """Crée les onglets principaux"""
         
         # Onglet Main - Tableau de bord + visualisation son
-        self.main_tab = MainTab(self.event_bus)
+        self.main_tab = MainTab(self.event_bus, self.config_manager)
         self.tab_widget.addTab(self.main_tab, "MAIN")
         
         # Onglet Logs - Affichage des logs avec filtres
-        self.logs_tab = LogsTab(self.event_bus)
+        self.logs_tab = LogsTab(self.event_bus, self.config_manager)
         self.tab_widget.addTab(self.logs_tab, "LOGS")
         
         # Onglet Micro - VU-mètre et sélection micro
-        self.micro_tab = MicroTab(self.event_bus)
+        self.micro_tab = MicroTab(self.event_bus, self.config_manager)
         self.tab_widget.addTab(self.micro_tab, "MICRO")
         
         # Onglet Web - Liens vers interfaces web
-        self.web_tab = WebTab(self.event_bus)
+        self.web_tab = WebTab(self.event_bus, self.config_manager)
         self.tab_widget.addTab(self.web_tab, "WEB")
 
         # Onglet config - Liens vers interfaces web
-        self.config_tab = ConfigTab(self.event_bus)
+        self.config_tab = ConfigTab(self.event_bus, self.config_manager)
         self.tab_widget.addTab(self.config_tab, "CONFIG")
 
          # ✅ NOUVEAU: Connecter les changements d'onglets
@@ -147,14 +149,6 @@ class OrionMainWindow(QtWidgets.QMainWindow):
             current_widget.on_tab_show()
         print(f"Changement d'onglet détecté: {index}")
     
-    def set_config_manager(self, config_manager):
-        """Passe le gestionnaire de config aux onglets qui en ont besoin"""
-        if hasattr(self.micro_tab, 'set_config_manager'):
-            self.micro_tab.set_config_manager(config_manager)
-    
-        if hasattr(self.config_tab, 'set_config_manager'):  # ← AJOUTER
-            self.config_tab.set_config_manager(config_manager)
-
     def _setup_style(self):
         """Applique le style LCARS"""
         self.setStyleSheet(MAIN_STYLE)
@@ -165,11 +159,3 @@ class OrionMainWindow(QtWidgets.QMainWindow):
         screen_center = QtGui.QGuiApplication.primaryScreen().availableGeometry().center()
         geo.moveCenter(screen_center)
         self.move(geo.topLeft())
-
-    def set_config_manager(self, config_manager):
-        """Passe le gestionnaire de config aux onglets qui en ont besoin"""
-        if hasattr(self.micro_tab, 'set_config_manager'):
-            self.micro_tab.set_config_manager(config_manager)
-    
-        if hasattr(self.config_tab, 'set_config_manager'):  # ← AJOUTER
-            self.config_tab.set_config_manager(config_manager)

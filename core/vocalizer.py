@@ -49,12 +49,30 @@ class Vocalizer:
         
         print(f"🎤 Vocalizer initialisé avec {len(self.engines)} moteur(s)")
     
+    # ✅ AJOUTER cette méthode manquante :
+    def _get_config_value(self, key: str, default=None):
+        """
+        Récupère une valeur depuis le gestionnaire de configuration
+        
+        Args:
+            key: Clé de configuration (ex: "debug_sw")
+            default: Valeur par défaut si clé absente
+            
+        Returns:
+            Valeur de configuration ou default
+        """
+        try:
+            return self.config_manager.get(key, default)
+        except Exception as e:
+            print(f"⚠️ Erreur lecture config '{key}': {e}")
+            return default
+        
     def create(self, engine: str, action_code: str, text: str, 
                effect: str = "none", play_now: bool = True, skin_test: bool = False) -> str:
         """Point d'entrée UNIQUE pour la synthèse vocale avec système de couches"""
-        
-        print(f"🎵 VCZ.create(engine={engine}, action={action_code}, text='{text[:30]}...', effect={effect}, play={play_now}, skin_test={skin_test})")
-        
+
+        if self._get_config_value("debug_sw"): print(f"🎵 VCZ.create(engine={engine}, action={action_code}, text='{text[:30]}...', effect={effect}, play={play_now}, skin_test={skin_test})")
+
         try:
             # =========================================================================
             # 🎤 ÉTAPE 1 : GÉNÉRATION DU BRUT (inchangée)
@@ -281,7 +299,7 @@ class Vocalizer:
             rate_int = self.config_manager.get("edgetts.rate", 0)
             pitch_int = self.config_manager.get("edgetts.pitch", 0)
             
-            print(f"🔧 Debug prefix - Rate: {rate_int}, Pitch: {pitch_int}")
+            if self._get_config_value("debug_sw"):  print(f"🔧 Debug prefix - Rate: {rate_int}, Pitch: {pitch_int}")
             
             # ✅ GÉNÉRATION SIMPLIFIÉE DU PRÉFIXE
             if rate_int == 0 and pitch_int == 0:
@@ -291,7 +309,7 @@ class Vocalizer:
             pitch_prefix = f"p{pitch_int:+d}" if pitch_int != 0 else "p0"
             
             prefix = f"{rate_prefix}_{pitch_prefix}"
-            print(f"✅ Préfixe final: '{prefix}'")
+            if self._get_config_value("debug_sw"):  print(f"✅ Préfixe final: '{prefix}'")
             return prefix
             
         except Exception as e:

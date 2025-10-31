@@ -11,9 +11,10 @@ from core.bus import EventBus
 class WebTab(QtWidgets.QWidget):
     """Onglet pour les liens web"""
     
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus, config_manager=None):  # ✅ Ajouter config_manager
         super().__init__()
         self.event_bus = event_bus
+        self.config_manager = config_manager  # ✅ Stocker
         self._setup_ui()
     
     def _setup_ui(self):

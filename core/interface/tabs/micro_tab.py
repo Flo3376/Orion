@@ -19,7 +19,7 @@ BLOCKSIZE = 1024
 DTYPE = 'float32'
 
 
-def list_input_devices() -> List[Tuple[int, str]]:
+def list_input_devices(debug: bool = False) -> List[Tuple[int, str]]:
     """Return WASAPI devices only (modern Windows audio API)."""
     devices = sd.query_devices()
     hostapis = sd.query_hostapis()
@@ -32,12 +32,16 @@ def list_input_devices() -> List[Tuple[int, str]]:
             # WASAPI seulement - API moderne recommandée
             if host_name == 'Windows WASAPI':
                 device_name = dev['name']
-                label = f"{device_name} (in:{dev['max_input_channels']})"  # Plus simple sans [API]
+                label = f"{device_name} (in:{dev['max_input_channels']})"
                 items.append((idx, label))
-                print(f"🎤 WASAPI device {idx}: {device_name}")
+                
+                # ✅ FIX : Debug conditionnel
+                if debug: 
+                    print(f"🎤 WASAPI device {idx}: {device_name}")
     
     items.sort(key=lambda x: x[1])
-    print(f"📋 {len(items)} micros WASAPI trouvés")
+    if debug:
+        print(f"📋 {len(items)} micros WASAPI trouvés")
     return items
 
 
@@ -188,13 +192,13 @@ class AudioWorker(QtCore.QObject):
 class MicroTab(QtWidgets.QWidget):
     """Onglet pour la gestion du micro avec VU-mètre"""
     
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus, config_manager=None):  # ✅ Ajouter config_manager
         super().__init__()
         self.event_bus = event_bus
-        self.config_manager = None  # Sera défini via set_config_manager
-        self._is_tab_visible = False  # Pour savoir si on est sur cet onglet
+        self.config_manager = config_manager  # ✅ Déjà correct
+        self._is_tab_visible = False
         self._setup_ui()
-        self._setup_audio()
+        self._setup_audio() 
         self._populate_devices()
 
     def set_config_manager(self, config_manager):
@@ -314,7 +318,9 @@ class MicroTab(QtWidgets.QWidget):
         self.device_combo.clear()
         
         try:
-            inputs = list_input_devices()
+            # ✅ FIX : Passer le debug depuis la config
+            debug_enabled = self._get_config_value("debug_sw", False) if self.config_manager else False
+            inputs = list_input_devices(debug=debug_enabled)  # ← Passer debug
             if not inputs:
                 self.device_combo.addItem("Aucun périphérique d'entrée trouvé", None)
                 self.device_combo.setEnabled(False)
@@ -456,6 +462,14 @@ class MicroTab(QtWidgets.QWidget):
                 print(f"❌ Erreur lors de la sauvegarde: {e}")
         else:
             self.status_label.setText("Aucun micro sélectionné à sauvegarder")
+
+    def _get_config_value(self, key: str, default=None):
+        """Récupère une valeur depuis le gestionnaire de configuration"""
+        try:
+            return self.config_manager.get(key, default) if self.config_manager else default
+        except Exception as e:
+            print(f"⚠️ Erreur lecture config '{key}': {e}")
+            return default
 
     def closeEvent(self, event):
         """Nettoyage lors de la fermeture"""

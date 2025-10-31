@@ -25,13 +25,13 @@ class FXProcessor:
         self.config_manager = config_manager
         self.event_bus = event_bus
         
-        print("🔧 FXProcessor initialisé")
+        if self._get_config_value("debug_sw", False): print("🔧 FXProcessor initialisé")
     
     def apply_skin_effects(self, source_path: str, target_path: str, skin_params: dict) -> bool:
         """Applique les effets skin depuis brut.wav vers skin.wav avec FFmpeg"""
         try:
             # ✅ DEBUG : Afficher TOUS les paramètres reçus
-            print(f"🔍 DEBUG skin_params REÇUS: {skin_params}")
+            if self._get_config_value("debug_sw", False): print(f"🔍 DEBUG skin_params REÇUS: {skin_params}")
             
             source = Path(source_path)
             target = Path(target_path)
@@ -56,7 +56,7 @@ class FXProcessor:
             hash = skin_params.get("hash", 0)
             dry_wet = skin_params.get("dry_wet", 100)
 
-            print(f"🎛️ Effets skin: pitch={pitch}, speed={speed}, highpass={highpass}, lowpass={lowpass}, metallic={metallic}, dry_wet={dry_wet}, distortion={distortion}, reverb={reverb}, echo={echo}, vocoder={vocoder}, hash={hash}")
+            if self._get_config_value("debug_sw", False): print(f"🎛️ Effets skin: pitch={pitch}, speed={speed}, highpass={highpass}, lowpass={lowpass}, metallic={metallic}, dry_wet={dry_wet}, distortion={distortion}, reverb={reverb}, echo={echo}, vocoder={vocoder}, hash={hash}")
 
             # Construire la chaîne de filtres FFmpeg
             filters = []
@@ -260,8 +260,8 @@ class FXProcessor:
             import time
             max_wait = 15  # 15 secondes max
             wait_time = 0
-            
-            print(f"⏳ Attente génération {effect} (max {max_wait}s)...")
+
+            if self._get_config_value("debug_sw", False): print(f"⏳ Attente génération {effect} (max {max_wait}s)...")
             while not target.exists() and wait_time < max_wait:
                 time.sleep(0.5)
                 wait_time += 0.5

@@ -102,18 +102,22 @@ class AutoSaveManager:
 class ConfigTab(QtWidgets.QWidget):
     """Onglet pour la configuration de l'application"""
 
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus, config_manager=None):  # ✅ Ajouter config_manager
         super().__init__()
         self.event_bus = event_bus
-        self.config_manager = None
+        self.config_manager = config_manager  # ✅ Stocker directement
         self._form_widgets = {}
-        self.auto_saver = None  # ✅ AJOUTÉ
-
-    def set_config_manager(self, config_manager):
-        """Reçoit le gestionnaire de configuration et crée l'interface"""
-        self.config_manager = config_manager
-        self.auto_saver = AutoSaveManager(config_manager)  # ✅ AJOUTÉ
-        self._setup_ui()
+        self.auto_saver = None
+        
+        # ✅ FIX: Initialiser directement si config fournie
+        if self.config_manager:
+            self.auto_saver = AutoSaveManager(config_manager)
+            self._setup_ui()
+        else:
+            # Interface temporaire en attente
+            temp_label = QtWidgets.QLabel("En attente de la configuration...")
+            layout = QtWidgets.QVBoxLayout(self)
+            layout.addWidget(temp_label)
 
     def _setup_ui(self):
         if not self.config_manager:
@@ -572,7 +576,8 @@ class ConfigTab(QtWidgets.QWidget):
                 widget = self._create_combo(options, value)
                 config_key = self._infer_config_key(label_text)
                 widget._config_key = config_key
-                print(f"🔗 ComboBox '{label_text}' lié à la config '{config_key}'")
+                if self._get_config_value("debug_sw", False):  # ← Ajouter paramètre default + bonne clé
+                    print(f"🔗 ComboBox '{label_text}' lié à la config '{config_key}'")
                 label = QtWidgets.QLabel(f"{label_text}:")
             elif field_type == "button_group":
                 widget = self._create_button_group(value)
@@ -608,7 +613,8 @@ class ConfigTab(QtWidgets.QWidget):
                 # ✅ NOUVEAU: Configurer l'auto-save avec la clé appropriée
                 config_key = self._infer_config_key(label_text)
                 if hasattr(widget, '_setup_auto_save') and self.auto_saver:
-                    print(f"🔗 Auto-save configuré pour: {label_text} -> {config_key}")
+                    if self._get_config_value("debug_sw", False):  # ← Ajouter paramètre default + bonne clé
+                        print(f"🔗 Configuration auto-save pour '{label_text}' avec clé '{config_key}'")
                     widget._setup_auto_save(widget, config_key)
                 
                 if current_subsection_layout:

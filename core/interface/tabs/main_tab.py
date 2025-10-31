@@ -11,9 +11,10 @@ from core.bus import EventBus
 class MainTab(QtWidgets.QWidget):
     """Onglet principal avec tableau de bord et visualisation"""
     
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus, config_manager=None):  # ✅ Ajouter config_manager
         super().__init__()
         self.event_bus = event_bus
+        self.config_manager = config_manager  # ✅ Stocker
         self._setup_ui()
         self._setup_event_handling()  # ← AJOUTER cette ligne
     
@@ -139,4 +140,4 @@ class MainTab(QtWidgets.QWidget):
         """Met à jour le statut du bouton Config"""
         self.btn_config.setProperty("status", status)
         self.btn_config.setText(text)
-        self.btn_config.style().polish(self.btn_config)        
+        self.btn_config.style().polish(self.btn_config)

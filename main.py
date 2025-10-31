@@ -124,10 +124,7 @@ def on_bus_message(msg):
             
         # ✅ Déléguer au VCZ (qui publiera audio.play_file si succès)
         result = vcz.create(engine, action, text, effect, play_now)
-            
     
-    
-
     if name == "info.high.started":
         print("Info HIGH démarrée, musique et journal stoppés.")
         # ex : LED bureau rouge + baisse Spotify
@@ -223,9 +220,11 @@ def start_listen_manager_async():
         traceback.print_exc()
 
 def main():
-    global config, sm
+    global config, sm, lexique, window_manager  # ✅ Ajouter window_manager
     
     print("🚀 Démarrage d'Orion...")
+    
+    sm = SoundManager(event_bus=bus)
     
     # Créer l'application Qt
     app = QtWidgets.QApplication([])
@@ -262,31 +261,23 @@ def main():
     # ✅ Créer le gestionnaire de configuration et l'assigner à la variable globale
     config = get_config_manager(bus)
     
-    # ✅ Créer le SoundManager et l'assigner à la variable globale
-    sm = SoundManager(event_bus=bus)
+    # ✅ Passer config au lexique pour hotword
+    lexique.set_config_manager(config)
+    
+    # ✅ Maintenant on peut faire update_SRGS
+    print("🎙️ Génération des grammaires SRGS...")
+    if not lexique.update_SRGS(force=True):
+       print("⚠️ Problème avec la génération des grammaires, continuons...")
 
+    # ✅ Créer le gestionnaire de fenêtres AVEC la config
+    from core.interface.window_manager import WindowManager
+    window_manager = WindowManager(config_manager=config)
     
+    # ✅ Créer l'interface principale (SANS window_manager)
+    interface = create_interface(bus, config)
     
-    # Initialiser le SoundManager
-    sm.init({
-        "master_volume": 1.0,
-        "music_volume": 0.6,
-        "journal_volume": 0.7,
-        "info_volume": 0.8,
-        "duck_fade_ms": 200,
-        "log_full_paths": False,
-    })
-    print("🔊 SoundManager initialisé")
-
-    # ✅ Créer le gestionnaire de fenêtres
-    window_manager = WindowManager()
-    
-    # Afficher les infos écrans pour debug
+    # ✅ Gérer la position avec window_manager APRÈS création
     window_manager.get_screen_info()
-    
-    # Créer l'interface
-    interface = create_interface(bus)
-    interface.set_config_manager(config)
     
     # ✅ Restaurer la position avant d'afficher
     position_restored = window_manager.restore_window_state(interface, "orion_main")
@@ -339,7 +330,7 @@ def main():
             "payload": {
                 "engine": config.get("vocalisation.engine", "edgetts"),
                 "action": "start_orion", 
-                "text": "Bonjour, je suis votre copilote Orion. Système initialisé.",
+                "text": "Bonjour, je suis votre copilote Orion. Système en cours de démarrage.",
                 "effect": config.get("vocalisation.effect", "none"),
                 "play_now": True
             }

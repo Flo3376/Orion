@@ -11,9 +11,21 @@ from PySide6 import QtCore, QtWidgets
 class WindowManager:
     """Gestionnaire pour sauvegarder/restaurer la position des fenêtres"""
     
-    def __init__(self, config_file="./core/config/window_state.json"):
+    def __init__(self, config_file="./core/config/window_state.json", config_manager=None):
         self.config_file = Path(config_file)
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # ✅ NOUVEAU: Intégration du gestionnaire de config
+        self.config_manager = config_manager
+    
+    def _get_debug_setting(self) -> bool:
+        """Récupère le paramètre debug_sw depuis la config principale"""
+        if self.config_manager:
+            try:
+                return self.config_manager.get("debug_sw", False)
+            except Exception:
+                return False
+        return False
     
     def save_window_state(self, window, window_name="main_window"):
         """Sauvegarde la position et taille de la fenêtre"""
@@ -41,7 +53,9 @@ class WindowManager:
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(state_data, f, indent=2)
             
-            print(f"💾 Position fenêtre sauvée: {window_name} -> {geometry.x()}, {geometry.y()}")
+            # ✅ FIX: Utiliser debug_sw depuis la config
+            if self._get_debug_setting():
+                print(f"💾 Position fenêtre sauvée: {window_name} -> {geometry.x()}, {geometry.y()}")
             
         except Exception as e:
             print(f"❌ Erreur sauvegarde position: {e}")
@@ -50,14 +64,16 @@ class WindowManager:
         """Restaure la position et taille de la fenêtre"""
         try:
             if not self.config_file.exists():
-                print("📍 Aucune position sauvée, utilisation par défaut")
+                if self._get_debug_setting():
+                    print("📍 Aucune position sauvée, utilisation par défaut")
                 return False
             
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 state_data = json.load(f)
             
             if window_name not in state_data:
-                print(f"📍 Aucune position sauvée pour {window_name}")
+                if self._get_debug_setting():
+                    print(f"📍 Aucune position sauvée pour {window_name}")
                 return False
             
             window_state = state_data[window_name]
@@ -90,10 +106,13 @@ class WindowManager:
                 if maximized:
                     window.showMaximized()
                 
-                print(f"🔄 Position fenêtre restaurée: {window_name} -> {x}, {y}")
+                # ✅ FIX: Utiliser debug_sw depuis la config
+                if self._get_debug_setting():
+                    print(f"🔄 Position fenêtre restaurée: {window_name} -> {x}, {y}")
                 return True
             else:
-                print(f"⚠️ Position invalide pour {window_name}, utilisation par défaut")
+                if self._get_debug_setting():
+                    print(f"⚠️ Position invalide pour {window_name}, utilisation par défaut")
                 return False
                 
         except Exception as e:
@@ -111,6 +130,14 @@ class WindowManager:
         print(f"🖥️ {len(screens)} écran(s) détecté(s):")
         for i, screen in enumerate(screens):
             geometry = screen.geometry()
-            print(f"   Écran {i}: {geometry.width()}x{geometry.height()} à ({geometry.x()}, {geometry.y()})")
+            # ✅ FIX: Utiliser debug_sw depuis la config
+            if self._get_debug_setting():
+                print(f"   Écran {i}: {geometry.width()}x{geometry.height()} à ({geometry.x()}, {geometry.y()})")
         
         return screens
+
+    def set_config_manager(self, config_manager):
+        """Définit le gestionnaire de configuration"""
+        self.config_manager = config_manager
+        if self._get_debug_setting():
+            print("🔧 WindowManager: Configuration manager défini")
