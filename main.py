@@ -87,9 +87,12 @@ def on_bus_message(msg):
         confidence_threshold = confidence_threshold_config / 100.0  # ex: 50 -> 0.5
         
         if confidence_received < confidence_threshold:
-            # Extraire le nom de la commande pour le message de rejet
-            options = data.get("options", {})
-            action_detected = options.get("action", "commande_inconnue") if options else "commande_inconnue"
+            # ✅ PROTECTION : Vérifier que data et options existent
+            options = data.get("options")
+            if options is None:
+                action_detected = "données_manquantes"
+            else:
+                action_detected = options.get("action", "commande_inconnue")
             
             print(f"🎤 COMMANDE REJETÉE '{action_detected}' (confiance trop basse)")
             print(f"💡 Confiance reçue: {confidence_received:.2f} ({confidence_received*100:.0f}%)")
@@ -101,8 +104,13 @@ def on_bus_message(msg):
         print(data)
         print(f"\n🎤 COMMANDE RECONNUE (COMPLET):")
         
-        options = data.get("options", {})
-        action_detected = options.get("action", "") if options else ""
+        # ✅ PROTECTION : Vérifier que options existe avant de l'utiliser
+        options = data.get("options")
+        if options is None:
+            print("⚠️ Aucune option trouvée dans les données de reconnaissance")
+            action_detected = "options_manquantes"
+        else:
+            action_detected = options.get("action", "action_manquante")
         # Récupérer l'action dans le lexique
         action = lexique.get_action(action_detected)
         random_response = lexique.get_random_response(action_detected)
