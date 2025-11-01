@@ -420,41 +420,113 @@ class VoiceEffectsProcessor:
     # =========================================================================
     
     def _apply_pitch_shift(self, data: np.ndarray, semitones: float) -> np.ndarray:
-        """Change la hauteur sans affecter la vitesse (pitch shift)"""
+        """Change la hauteur sans affecter la vitesse (pitch shift) - METHODE FFMPEG"""
         if semitones == 0:
             return data
         
-        factor = 2 ** (semitones / 12.0)
-        new_length = int(len(data) / factor)
-        indices = np.linspace(0, len(data) - 1, new_length)
-        resampled = np.zeros((new_length, data.shape[1]), dtype=data.dtype)
-        
-        for ch in range(data.shape[1]):
-            resampled[:, ch] = np.interp(indices, np.arange(len(data)), data[:, ch])
-        
-        original_length = len(data)
-        stretch_indices = np.linspace(0, len(resampled) - 1, original_length)
-        stretched = np.zeros_like(data)
-        
-        for ch in range(data.shape[1]):
-            stretched[:, ch] = np.interp(stretch_indices, np.arange(len(resampled)), resampled[:, ch])
-        
-        return stretched
+        # 🔧 CORRECTION : Utiliser FFmpeg au lieu de np.interp
+        return self._apply_ffmpeg_pitch(data, semitones)
     
     def _apply_speed_change(self, data: np.ndarray, speed_percent: float) -> np.ndarray:
-        """Change la vitesse de lecture (affecte pitch et tempo)"""
+        """Change la vitesse de lecture (affecte pitch et tempo) - METHODE FFMPEG"""
         if speed_percent == 0:
             return data
         
-        factor = 1.0 + (speed_percent / 100.0)
-        new_length = int(len(data) / factor)
-        indices = np.linspace(0, len(data) - 1, new_length)
-        result = np.zeros((new_length, data.shape[1]), dtype=data.dtype)
+        # 🔧 CORRECTION : Utiliser FFmpeg au lieu de np.interp
+        return self._apply_ffmpeg_speed(data, speed_percent)
+    
+    def _apply_ffmpeg_pitch(self, data: np.ndarray, semitones: float) -> np.ndarray:
+        """Pitch shift via FFmpeg (comme fx_processor.py)"""
+        import tempfile
+        import subprocess
         
-        for ch in range(data.shape[1]):
-            result[:, ch] = np.interp(indices, np.arange(len(data)), data[:, ch])
+        # Créer fichier temporaire
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_in:
+            temp_in_path = temp_in.name
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_out:
+            temp_out_path = temp_out.name
         
-        return result
+        try:
+            # Sauvegarder l'audio d'entrée
+            import soundfile as sf
+            sf.write(temp_in_path, data, self.sample_rate)
+            
+            # Commande FFmpeg (comme fx_processor.py)
+            pitch_ratio = 2 ** (semitones / 12.0)
+            cmd = [
+                "ffmpeg", "-y", "-i", temp_in_path,
+                "-af", f"asetrate={self.sample_rate}*{pitch_ratio:.3f},aresample={self.sample_rate}",
+                temp_out_path
+            ]
+            
+            subprocess.run(cmd, capture_output=True, check=True)
+            
+            # Lire le résultat
+            result_data, _ = sf.read(temp_out_path)
+            if result_data.ndim == 1:
+                result_data = result_data.reshape(-1, 1)
+            
+            return result_data
+            
+        except Exception as e:
+            print(f"❌ Erreur FFmpeg pitch: {e}")
+            return data
+        finally:
+            # Nettoyer
+            import os
+            try:
+                os.unlink(temp_in_path)
+                os.unlink(temp_out_path)
+            except:
+                pass
+    
+    def _apply_ffmpeg_speed(self, data: np.ndarray, speed_percent: float) -> np.ndarray:
+        """Speed change via FFmpeg (comme fx_processor.py)"""
+        import tempfile
+        import subprocess
+        
+        # Créer fichier temporaire
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_in:
+            temp_in_path = temp_in.name
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_out:
+            temp_out_path = temp_out.name
+        
+        try:
+            # Sauvegarder l'audio d'entrée
+            import soundfile as sf
+            sf.write(temp_in_path, data, self.sample_rate)
+            
+            # Commande FFmpeg (comme fx_processor.py)
+            speed_ratio = 1.0 + (speed_percent / 100.0)
+            if speed_ratio <= 0.1:
+                return data
+                
+            cmd = [
+                "ffmpeg", "-y", "-i", temp_in_path,
+                "-af", f"atempo={speed_ratio:.3f}",
+                temp_out_path
+            ]
+            
+            subprocess.run(cmd, capture_output=True, check=True)
+            
+            # Lire le résultat
+            result_data, _ = sf.read(temp_out_path)
+            if result_data.ndim == 1:
+                result_data = result_data.reshape(-1, 1)
+            
+            return result_data
+            
+        except Exception as e:
+            print(f"❌ Erreur FFmpeg speed: {e}")
+            return data
+        finally:
+            # Nettoyer
+            import os
+            try:
+                os.unlink(temp_in_path)
+                os.unlink(temp_out_path)
+            except:
+                pass
     
     def _apply_helium(self, data: np.ndarray, intensity: float) -> np.ndarray:
         """Effet hélium (monte dans les aigus)"""

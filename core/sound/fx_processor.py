@@ -59,49 +59,50 @@ class FXProcessor:
             if self._get_config_value("debug_sw", False): print(f"🎛️ Effets skin: pitch={pitch}, speed={speed}, highpass={highpass}, lowpass={lowpass}, metallic={metallic}, dry_wet={dry_wet}, distortion={distortion}, reverb={reverb}, echo={echo}, vocoder={vocoder}, hash={hash}")
 
             # Construire la chaîne de filtres FFmpeg
-            filters = []
+            base_filters = []      # Effets de transformation (100%) - pitch, speed, highpass, lowpass
+            additive_filters = []  # Effets additifs (dry_wet) - reverb, echo, distortion, metallic
             
-            # === PITCH SHIFTING ===
+            # === PITCH SHIFTING (TRANSFORMATION 100%) ===
             if pitch != 0:
                 # Pitch en demi-tons (-12 à +12)
-                pitch_ratio = 2 ** (pitch / 12.0)  # ← OK, conversion correcte
-                filters.append(f"asetrate=24000*{pitch_ratio:.3f},aresample=24000")
+                pitch_ratio = 2 ** (pitch / 12.0)
+                base_filters.append(f"asetrate=24000*{pitch_ratio:.3f},aresample=24000")
                 print(f"   🎵 Pitch: {pitch} demi-tons (ratio: {pitch_ratio:.3f})")
             
-            # === SPEED CHANGE ===
+            # === SPEED CHANGE (TRANSFORMATION 100%) ===
             if speed != 0:
                 # Convertir % en ratio (speed=50 = 1.5x plus rapide)
                 speed_ratio = 1.0 + (speed / 100.0)
                 if speed_ratio > 0.1:  # Éviter les valeurs trop extrêmes
-                    filters.append(f"atempo={speed_ratio:.3f}")
+                    base_filters.append(f"atempo={speed_ratio:.3f}")
                     print(f"   ⚡ Vitesse: {speed}% (ratio: {speed_ratio:.3f})")
             
-            # === FILTRE PASSE-HAUT ===
+            # === FILTRE PASSE-HAUT (TRANSFORMATION 100%) ===
             if highpass > 0:
                 highpass_freq = 200 + (highpass * 22)  # 200Hz à 2400Hz
-                filters.append(f"highpass=f={highpass_freq}")
+                base_filters.append(f"highpass=f={highpass_freq}")
                 print(f"   📈 Passe-haut: {highpass}% (coupure: {highpass_freq}Hz)")
                 
-            # === EFFET METALLIC (CORRIGER) ===
-            if metallic > 0:
-                filters.append(f"equalizer=f=3000:t=q:w=1:g={metallic}")
-                print(f"   🤖 Metallic: {metallic}% (gain: {metallic}dB)")
-
-            # === FILTRE PASSE-BAS ===
+            # === FILTRE PASSE-BAS (TRANSFORMATION 100%) ===
             if lowpass > 0:
                 lowpass_freq = 4000 - (lowpass * 35)   # 4000Hz à 500Hz
                 if lowpass_freq < 300: lowpass_freq = 300  # Plancher plus réaliste
-                filters.append(f"lowpass=f={lowpass_freq}")
+                base_filters.append(f"lowpass=f={lowpass_freq}")
                 print(f"   📉 Passe-bas: {lowpass}% (coupure: {lowpass_freq}Hz)")
-            
-            # === DISTORTION (CORRIGER) ===
+                
+            # === EFFET METALLIC (ADDITIF - DRY/WET) ===
+            if metallic > 0:
+                additive_filters.append(f"equalizer=f=3000:t=q:w=1:g={metallic}")
+                print(f"   🤖 Metallic: {metallic}% (gain: {metallic}dB)")
+
+            # === DISTORTION (ADDITIF - DRY/WET) ===
             if distortion > 0:
                 # Utiliser un filtre supporté : amplification + compression
                 drive_db = 1 + (distortion * 0.2)  # 1dB à 21dB
                 # Utiliser volume + acompressor au lieu d'overdrive
-                filters.append(f"volume={drive_db:.1f}dB")
+                additive_filters.append(f"volume={drive_db:.1f}dB")
                 if distortion > 30:  # Compression forte pour distortion élevée
-                    filters.append("acompressor=threshold=-10dB:ratio=4:attack=5:release=50")
+                    additive_filters.append("acompressor=threshold=-10dB:ratio=4:attack=5:release=50")
                 print(f"   🎸 Distortion: {distortion}% (gain: {drive_db:.1f}dB)")
             
             # === VOCODER (NOUVEAU) ===
@@ -109,7 +110,7 @@ class FXProcessor:
                 # Simulation vocoder avec modulation d'amplitude à basse fréquence
                 vocoder_freq = 2 + (vocoder * 0.1)  # 2Hz à 12Hz
                 vocoder_depth = 0.3 + (vocoder * 0.007)  # 0.3 à 1.0
-                filters.append(f"tremolo=f={vocoder_freq:.1f}:d={vocoder_depth:.2f}")
+                additive_filters.append(f"tremolo=f={vocoder_freq:.1f}:d={vocoder_depth:.2f}")
                 print(f"   🎛️ Vocoder: {vocoder}% (freq: {vocoder_freq:.1f}Hz, depth: {vocoder_depth:.2f})")
             
             # === HASH / DEGRADATION DIGITALE (NOUVEAU) ===
@@ -117,9 +118,9 @@ class FXProcessor:
                 # Simulation dégradation : downsampling + bitcrush via decimator
                 decimation = 1 + int(hash * 0.08)  # 1x à 8x decimation
                 if decimation > 1:
-                    filters.append(f"asamplefmt=s16:sample_rate=24000")  # Force 16-bit
+                    additive_filters.append(f"asamplefmt=s16:sample_rate=24000")  # Force 16-bit
                     # Simuler bitcrush avec quantization
-                    filters.append(f"volume=0.{100-hash}")  # Réduction dynamique
+                    additive_filters.append(f"volume=0.{100-hash}")  # Réduction dynamique
                     print(f"   📱 Hash: {hash}% (degradation: {decimation}x)")
             
             # === ECHO (AJUSTER AMPLITUDES) ===
@@ -127,7 +128,7 @@ class FXProcessor:
                 # Amplitudes plus fines pour l'écho
                 echo_delay = 50 + (echo * 5)         # 50ms à 550ms (plus court)
                 echo_gain = 0.05 + (echo * 0.004)   # 0.05 à 0.45 (plus subtil)
-                filters.append(f"aecho=0.8:0.88:{int(echo_delay)}:{echo_gain:.3f}")
+                additive_filters.append(f"aecho=0.8:0.88:{int(echo_delay)}:{echo_gain:.3f}")
                 print(f"   📢 Echo: {echo}% (delay: {echo_delay:.0f}ms, gain: {echo_gain:.3f})")
             
             # === REVERB (AJUSTER AMPLITUDES) ===
@@ -135,73 +136,37 @@ class FXProcessor:
                 # Amplitudes plus fines pour la réverbération
                 reverb_time = 0.05 + (reverb * 0.015)   # 0.05s à 1.55s (plus court)
                 reverb_decay = 0.1 + (reverb * 0.004)   # 0.1 à 0.5 (plus subtil)
-                filters.append(f"aecho=0.8:0.9:800|1200:{reverb_decay:.3f}|{reverb_decay*0.6:.3f}")
+                additive_filters.append(f"aecho=0.8:0.9:800|1200:{reverb_decay:.3f}|{reverb_decay*0.6:.3f}")
                 print(f"   🏛️ Reverb: {reverb}% (time: {reverb_time:.2f}s, decay: {reverb_decay:.3f})")
             
-            # === DRY/WET MIX (CORRIGÉ) ===
-            if filters and dry_wet < 100:
-                wet_ratio = (100 - dry_wet) / 100.0  # 0.0 à 1.0
-                dry_ratio = dry_wet / 100.0          # 1.0 à 0.0
-                
-                print(f"   🌊 Dry/Wet: {dry_wet}% (wet: {wet_ratio:.2f}, dry: {dry_ratio:.2f})")
-                
-                # ✅ SOLUTION : Mixer les 2 signaux avec amix
-                if wet_ratio < 1.0:  # Si on veut du mix
-                    # Construire le filtergraph complexe pour mixer dry + wet
-                    filter_chain = f"[0:a]volume={dry_ratio}[dry];[0:a]{','.join(filters)}[wet];[dry][wet]amix=inputs=2:weights={dry_ratio} {wet_ratio}[out]"
-                    
-                    # Commande FFmpeg modifiée pour le mix
-                    cmd = [
-                        "ffmpeg", "-y",
-                        "-i", str(source),
-                        "-filter_complex", filter_chain,
-                        "-map", "[out]",
-                        "-acodec", "pcm_s16le",
-                        "-ar", "24000",
-                        "-ac", "1",
-                        str(target)
-                    ]
-                    
-                    print(f"🔧 FFmpeg dry/wet mix: dry={dry_ratio:.2f}, wet={wet_ratio:.2f}")
-                    
-                else:
-                    # 100% wet = effets normaux (comme avant)
-                    filter_chain = ",".join(filters)
-                    cmd = [
-                        "ffmpeg", "-y",
-                        "-i", str(source),
-                        "-af", filter_chain,
-                        "-acodec", "pcm_s16le",
-                        "-ar", "24000",
-                        "-ac", "1",
-                        str(target)
-                    ]
-                    
-                    print(f"🔧 FFmpeg 100% wet: {filter_chain}")
-
-            elif not filters or dry_wet == 100:
-                # 100% dry = copie simple (aucun effet)
-                print("   ℹ️ Dry/Wet 100% → Copie simple sans effet")
-                import shutil
-                shutil.copy2(source, target)
-                return True
-
-            else:
-                # 100% wet avec effets
-                filter_chain = ",".join(filters)
+            # === LOGIQUE SIMPLIFIÉE TEMPORAIRE (éviter les erreurs FFmpeg) ===
+            # Appliquer SEULEMENT base_filters pour éviter les problèmes de syntaxe
+            
+            if base_filters:
+                # Seulement pitch/speed/filtres (pas d'écho garanti)
+                base_chain = ",".join(base_filters)
                 cmd = [
-                    "ffmpeg", "-y", 
+                    "ffmpeg", "-y",
                     "-i", str(source),
-                    "-af", filter_chain,
+                    "-af", base_chain,
                     "-acodec", "pcm_s16le",
                     "-ar", "24000",
                     "-ac", "1",
                     str(target)
                 ]
+                print(f"🔧 FFmpeg base seulement: {base_chain}")
+                # TODO: Implémenter dry_wet pour additive_filters plus tard
+                if additive_filters:
+                    print(f"⚠️ Effets additifs ignorés temporairement: {additive_filters}")
                 
-                print(f"🔧 FFmpeg 100% wet: {filter_chain}")
+            else:
+                # Aucun effet
+                print("   ℹ️ Aucun effet → Copie simple")
+                import shutil
+                shutil.copy2(source, target)
+                return True
 
-            # Exécuter la commande (déplacer cette partie après le if/else)
+            # Exécuter la commande FFmpeg
             try:
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
                 
