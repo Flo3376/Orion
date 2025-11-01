@@ -1,7 +1,8 @@
 """
 📚 Lexique Manager - Gestionnaire du lexique de commandes vocales
 """
-
+from core.pol import create_pol
+pol = create_pol(source_id=3)
 import yaml
 import xml.etree.ElementTree as ET
 import re
@@ -41,17 +42,18 @@ class SRGSGenerator:
             lexique_data = self.lexique_manager.load_lexique()
             
             if not lexique_data or not isinstance(lexique_data, dict):
-                print(f"⚠️ Erreur chargement lexique: {type(lexique_data)} = {lexique_data}")
+                pol.write(4, f"Erreur chargement lexique: {type(lexique_data)} = {lexique_data}", "log+print")
+                #print(f"⚠️ Erreur chargement lexique: {type(lexique_data)} = {lexique_data}")
                 return False
-            
-            print(f"📚 Lexique chargé: {len(lexique_data)} entrées")
-            
+
+            pol.write(4, f"📚 Lexique chargé: {len(lexique_data)} entrées", "log+print")
+
             # Filtrer les actions valides (exclure 'global')
             actions = {k: v for k, v in lexique_data.items() 
                       if k != 'global' and isinstance(v, dict) and 'root' in v}
             
             if not actions:
-                print("⚠️ Aucune action trouvée dans le lexique")
+                pol.write(2, f"Aucune action trouvée dans le lexique", "log+print")
                 return False
             
             # Séparer règles statiques et dynamiques
@@ -64,8 +66,8 @@ class SRGSGenerator:
                 else:
                     static_actions[action_name] = action_data
             
-            print(f"🎙️ Génération SRGS: {len(static_actions)} statiques + {len(dynamic_actions)} dynamiques")
-            
+            pol.write(4, f"🎙️ Génération SRGS: {len(static_actions)} statiques + {len(dynamic_actions)} dynamiques", "log+print")
+
             generated_count = 0
             
             # Générer les règles statiques (comme avant)
@@ -78,12 +80,11 @@ class SRGSGenerator:
             for action_name, action_data in dynamic_actions.items():
                 if self._generate_dynamic_grammar(action_name, action_data):
                     generated_count += 1
-            
-            print(f"✅ {generated_count}/{len(actions)} grammaires générées")
+            pol.write(4, f"✅ {generated_count}/{len(actions)} grammaires générées", "log+print")
             return generated_count > 0
             
         except Exception as e:
-            print(f"❌ Erreur génération grammaires: {e}")
+            pol.write(2, f"❌ Erreur génération grammaires: {e}", "log+print")
             import traceback
             traceback.print_exc()
             return False
@@ -98,11 +99,11 @@ class SRGSGenerator:
             if dynamic_info["type"] == "numeric":
                 return self._generate_numeric_multi_rule(action_name, action_data, dynamic_info)
             else:
-                print(f"⚠️ Type dynamique non supporté pour {action_name}: {dynamic_info['type']}")
+                pol.write(2, f"⚠️ Type dynamique non supporté pour {action_name}: {dynamic_info['type']}", "log+print")
                 return False
                 
         except Exception as e:
-            print(f"❌ Erreur génération dynamique {action_name}: {e}")
+            pol.write(2, f"❌ Erreur génération dynamique {action_name}: {e}", "log+print")
             return False
     
     def _analyze_dynamic_patterns(self, questions: List[str]) -> dict:
@@ -163,7 +164,7 @@ class SRGSGenerator:
             f.write(xml_content)
         
         category = action_data.get('cat', 'unknown')
-        print(f"✅ Grammaire multi-règles générée: {output_path.name} ({len(values)} valeurs {min_val}-{max_val}, cat: {category})")
+        pol.write(4, f"✅ Grammaire multi-règles générée: {output_path.name} ({len(values)} valeurs {min_val}-{max_val}, cat: {category})", "log")
         return True
     
     def _create_multi_rule_srgs(self, base_root_name: str, questions_template: List[str], values: List[int], pattern: str, action_data: dict) -> str:
@@ -312,11 +313,11 @@ class SRGSGenerator:
                 f.write(xml_content)
             
             category = action_data.get('cat', 'unknown')
-            print(f"✅ Grammaire générée: {output_path.name} ({len(questions)} questions, cat: {category})")
+            pol.write(4, f"✅ Grammaire générée: {output_path.name} ({len(questions)} questions, cat: {category})", "log")
             return True
             
         except Exception as e:
-            print(f"❌ Erreur génération {root_name}: {e}")
+            pol.write(2, f"❌ Erreur génération {root_name}: {e}", "log")
             return False
     
     def _create_srgs_xml_for_root(self, root_name: str, questions: List[str], action_data: dict) -> str:
@@ -373,20 +374,20 @@ class SRGSGenerator:
             # Vérifier si des fichiers de grammaire existent
             grammar_files = list(self.grammar_dir.glob("*.xml"))
             if not grammar_files:
-                print("🔍 Aucun fichier de grammaire trouvé → Régénération nécessaire")
+                pol.write(2, f"🔍 Aucun fichier de grammaire trouvé → Régénération nécessaire", "log")
                 return True
             
             # Vérifier si le lexique est plus récent que les grammaires
             for grammar_file in grammar_files:
                 grammar_mtime = grammar_file.stat().st_mtime
                 if lexique_mtime > grammar_mtime:
-                    print(f"🔍 Lexique plus récent que {grammar_file.name} → Régénération nécessaire")
+                    pol.write(2, f"🔍 Lexique plus récent que {grammar_file.name} → Régénération nécessaire", "log")
                     return True
             
             return False
             
         except Exception as e:
-            print(f"⚠️ Erreur vérification régénération: {e}")
+            pol.write(2, f"⚠️ Erreur vérification régénération: {e}", "log+print")
             return True  # En cas d'erreur, on régénère par sécurité
     
     # ... reste des méthodes existantes (_generate_numeric_multi_rule, etc.) ...
@@ -422,19 +423,19 @@ class LexiqueManager:
     def set_config_manager(self, config_manager):
         """Définit le gestionnaire de configuration pour accès au hotword"""
         self.config_manager = config_manager
-        print("🔧 LexiqueManager: Configuration définie pour génération SRGS")
+        pol.write(4, "🔧 LexiqueManager: Configuration définie pour génération SRGS", "log")
 
     def load_lexique(self) -> dict:
         """Charge le fichier lexique YAML"""
         try:
             if not self.lexique_path.exists():
-                print(f"❌ Fichier lexique non trouvé: {self.lexique_path}")
+                pol.write(2, f"❌ Fichier lexique non trouvé: {self.lexique_path}", "log+print")
                 return {}
             
             # Vérifier si recharge nécessaire
             current_mtime = self.lexique_path.stat().st_mtime
             if self._cache is None or self._last_modified != current_mtime:
-                print(f"🔄 Rechargement lexique: {self.lexique_path}")
+                pol.write(4, f"🔄 Rechargement lexique: {self.lexique_path}", "log")
                 
                 with open(self.lexique_path, 'r', encoding='utf-8') as f:
                     raw_data = yaml.safe_load(f)
@@ -442,7 +443,7 @@ class LexiqueManager:
                 
                 # ✅ VÉRIFIER que le YAML est valide
                 if not isinstance(raw_data, dict):
-                    print(f"❌ Lexique YAML invalide: {type(raw_data)}")
+                    pol.write(2, f"❌ Lexique YAML invalide: {type(raw_data)}", "log+print")
                     return {}
                 
                 # ✅ PARSER le lexique et remplir les collections
@@ -451,12 +452,12 @@ class LexiqueManager:
                 # ✅ Cacher les données RAW pour SRGS
                 self._cache = raw_data
                 
-                print(f"✅ Lexique chargé: {len(raw_data)} entrées, {len(self.actions)} actions parsées")
-        
+                pol.write(4, f"✅ Lexique chargé: {len(raw_data)} entrées, {len(self.actions)} actions parsées", "log+print")
+
             return self._cache
         
         except Exception as e:
-            print(f"❌ Erreur chargement lexique: {e}")
+            pol.write(2, f"❌ Erreur chargement lexique: {e}", "log+print")
             import traceback
             traceback.print_exc()
             return {}
@@ -506,7 +507,7 @@ class LexiqueManager:
             # Rules (première rule seulement pour l'instant)
             rules = action_data.get("rules", [])
             if not rules:
-                print(f"⚠️ Action sans rules: {action_name}")
+                pol.write(2, f"⚠️ Action sans rules: {action_name}", "log+print")
                 return None
             
             first_rule = rules[0]  # Prendre la première rule
@@ -541,7 +542,7 @@ class LexiqueManager:
             )
             
         except Exception as e:
-            print(f"❌ Erreur parsing action {action_name}: {e}")
+            pol.write(2, f"❌ Erreur parsing action {action_name}: {e}", "log+print")
             return None
     
     def _update_stats(self):
@@ -631,7 +632,7 @@ class LexiqueManager:
     
     def reload(self) -> bool:
         """Recharge le lexique depuis le fichier"""
-        print("🔄 Rechargement du lexique...")
+        pol.write(4, f"🔄 Rechargement du lexique: {self.lexique_path}", "log")
         return self.load_lexique()
     
     def update_SRGS(self, force: bool = False) -> bool:
@@ -646,19 +647,19 @@ class LexiqueManager:
         """
         try:
             if force:
-                print("🔄 Régénération forcée des grammaires SRGS...")
+                pol.write(4, "🔄 Régénération forcée des grammaires SRGS...", "log")
                 return self.srgs_generator.generate_all_by_root()
             else:
-                print("🔍 Vérification des grammaires SRGS...")
+                pol.write(4, "🔍 Vérification des grammaires SRGS...", "log")
                 if self.srgs_generator.should_regenerate():
-                    print("🔄 Lexique modifié → Régénération des grammaires nécessaire")
+                    pol.write(4, "🔄 Lexique modifié → Régénération des grammaires nécessaire", "log")
                     return self.srgs_generator.generate_all_by_root()
                 else:
-                    print("✅ Grammaires à jour")
+                    pol.write(4, "✅ Grammaires à jour", "log")
                     return True
                 
         except Exception as e:
-            print(f"❌ Erreur update_SRGS: {e}")
+            pol.write(2, f"❌ Erreur update_SRGS: {e}", "log+print")
             import traceback
             traceback.print_exc()
             return False

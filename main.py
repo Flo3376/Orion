@@ -3,6 +3,7 @@ from core.sound.player import SoundManager
 from core.sound.spotify import SpotifyController
 from core.listen.listen import get_listen_manager
 from core.config.manager import get_config_manager
+from core.log_manager import init_new_session
 import time
 import threading
 from core.interface import create_interface
@@ -21,6 +22,8 @@ from core.lexique.manager import get_lexique_manager
 import queue  # Pour les exceptions queue.Empty
 import signal
 import sys
+from core.pol import create_pol
+pol = create_pol(source_id=1)
 
 # ✅ Variables globales
 bus = EventBus()
@@ -63,16 +66,16 @@ def on_bus_message(msg):
 
     #pour les test audio de la config
     if name == "audio.play_file" and state == "request":
-        print("🔊 Test audio en cours...")
+        pol.write(1, "🔊 Test audio en cours...", "log")
         if sm:  # ✅ Utiliser sm au lieu de SoundManager
             # Utiliser la priorité info (basse) comme dans la doc
             sm.info.play(payload.get("file", ""), priority="low")
         else:
-            print("❌ SoundManager non initialisé")
+            pol.write(3, "❌ SoundManager non initialisé", "log+print")
     elif name == "audio.play_file" and state == "success":
-        print("✅ Test audio réussi")
+        pol.write(1, "✅ Test audio réussi", "log")
     elif name == "audio.play_file" and state == "error":
-        print("❌ Erreur lors du test audio")
+        pol.write(3, "❌ Erreur lors du test audio", "log+print")
 
     # Traitement spécial pour les reconnaissances vocales
     if name == "listen.main_listener" and state == "recognition":
@@ -93,30 +96,29 @@ def on_bus_message(msg):
                 action_detected = "données_manquantes"
             else:
                 action_detected = options.get("action", "commande_inconnue")
-            
-            print(f"🎤 COMMANDE REJETÉE '{action_detected}' (confiance trop basse)")
-            print(f"💡 Confiance reçue: {confidence_received:.2f} ({confidence_received*100:.0f}%)")
-            print(f"💡 Seuil requis: {confidence_threshold:.2f} ({confidence_threshold_config}%)")
+            pol.write(2, f"🎤 Commande rejetée '{action_detected}' (confiance trop basse: {confidence_received:.2f} < {confidence_threshold:.2f})", "log")
+            pol.write(2, f"🎤 COMMANDE REJETÉE '{action_detected}' (confiance trop basse)", "log")
+            pol.write(2, f"💡 Confiance reçue: {confidence_received:.2f} ({confidence_received*100:.0f}%)", "log")
+            pol.write(2, f"💡 Seuil requis: {confidence_threshold:.2f} ({confidence_threshold_config}%)", "log")
             return
-        
-        print(f"✅ Confiance OK: {confidence_received:.2f} ({confidence_received*100:.0f}%) >= {confidence_threshold:.2f} ({confidence_threshold_config}%)")
-        print()
-        print(data)
-        print(f"\n🎤 COMMANDE RECONNUE (COMPLET):")
-        
+        pol.write(2, f"🎤 Commande acceptée (confiance suffisante: {confidence_received:.2f} >= {confidence_threshold:.2f})", "log")
+        pol.write(1, f"✅ Confiance OK: {confidence_received:.2f} ({confidence_received*100:.0f}%) >= {confidence_threshold:.2f} ({confidence_threshold_config}%)", "log")
+        pol.write(1, f"🎤 COMMANDE RECONNUE (COMPLET):", "log")
+
         # ✅ PROTECTION : Vérifier que options existe avant de l'utiliser
         options = data.get("options")
         if options is None:
-            print("⚠️ Aucune option trouvée dans les données de reconnaissance")
+            pol.write(3, "⚠️ Aucune option trouvée dans les données de reconnaissance", "log+print")
             action_detected = "options_manquantes"
         else:
             action_detected = options.get("action", "action_manquante")
         # Récupérer l'action dans le lexique
         action = lexique.get_action(action_detected)
         random_response = lexique.get_random_response(action_detected)
-        print(f"🎤 COMMANDE RECONNUE: {action_detected}")
-        print(f"💬 Réponse aléatoire: {random_response}")
-        print(f"🗂️ effect: {config.get('vocalisation.effect', 'none')}")
+        
+        pol.write(1, f"🎤 COMMANDE RECONNUE: {action_detected}", "log")
+        pol.write(1, f"💬 Réponse aléatoire: {random_response}", "log")
+        pol.write(1, f"🗂️ effect: {config.get('vocalisation.effect', 'none')}", "log")
         action_event = {
             "name": "tts.speak",
             "state": "request",
@@ -136,7 +138,7 @@ def on_bus_message(msg):
     print("[MAIN] Event:", name, state, payload)
 
     if name == "tts.speak" and state == "request":
-        print("🎵 Demande TTS via bus...")
+        pol.write(1, "🎵 Demande TTS via bus...", "log")
         
         # Créer une instance VCZ
         from core.vocalizer import Vocalizer
@@ -148,14 +150,14 @@ def on_bus_message(msg):
         text = payload.get("text", "Test")
         effect = payload.get("effect", "none")
         play_now = payload.get("play_now", True)
-            
-        print(f"🎤 TTS: {engine}/{action} - '{text[:30]}...'")
-            
+
+        pol.write(1, f"🎤 TTS: {engine}/{action} - '{text[:30]}...'", "log")
+
         # ✅ Déléguer au VCZ (qui publiera audio.play_file si succès)
         result = vcz.create(engine, action, text, effect, play_now)
     
     if name == "info.high.started":
-        print("Info HIGH démarrée, musique et journal stoppés.")
+        pol.write(1, "Info HIGH démarrée, musique et journal stoppés.", "log")
         # ex : LED bureau rouge + baisse Spotify
         # hue.set_color("red")
         # spotify.lower_volume()
@@ -169,7 +171,7 @@ def on_bus_message(msg):
 
     # ✅ NOUVEAU : Gestion des événements FX Generator
     if name == "fx.generate_effect" and state == "request":
-        print("🎛️ Demande génération effet via bus...")
+        pol.write(1, "🎛️ Demande génération effet via bus...", "log")
         
         # Lazy import pour éviter les dépendances circulaires
         from core.sound.fx_generator import fx_generator
@@ -191,18 +193,18 @@ def on_bus_message(msg):
         }
         priority = priority_map.get(priority_str, Priority.NORMAL)
         
-        print(f"🎛️ Génération effet {effect_type} (priorité: {priority_str}, source: {requester})")
-        
+        pol.write(1, f"🎛️ Génération effet {effect_type} (priorité: {priority_str}, source: {requester})", "log")
+
         # Déclencher génération asynchrone
         success = fx_generator.create_async(source_path, effect_type, force_remake, priority)
         
         if success:
-            print(f"✅ Effet {effect_type} programmé")
+            pol.write(1, f"✅ Effet {effect_type} programmé", "log")
         else:
-            print(f"❌ Erreur programmation effet {effect_type}")
-            
+            pol.write(3, f"❌ Erreur programmation effet {effect_type}", "log+print")
+
     elif name == "fx.generate_all_variants" and state == "request":
-        print("🎛️ Demande génération toutes variantes via bus...")
+        pol.write(1, "🎛️ Demande génération toutes variantes via bus...", "log")
         
         # Lazy import pour éviter les dépendances circulaires
         from core.sound.fx_generator import fx_generator, Priority
@@ -223,15 +225,15 @@ def on_bus_message(msg):
         }
         priority = priority_map.get(priority_str, Priority.LOW)
         
-        print(f"🎛️ Génération toutes variantes {effects} (priorité: {priority_str}, source: {requester})")
-        
+        pol.write(1, f"🎛️ Génération toutes variantes {effects} (priorité: {priority_str}, source: {requester})", "log")
+
         # Programmer chaque effet
         programmed = 0
         for effect in effects:
             if fx_generator.create_async(source_path, effect, force_remake, priority):
                 programmed += 1
-        
-        print(f"✅ {programmed}/{len(effects)} variantes programmées")
+
+        pol.write(1, f"✅ {programmed}/{len(effects)} variantes programmées", "log")
 
 # ✅ Corriger la fonction async
 def start_listen_manager_async():
@@ -251,7 +253,10 @@ def start_listen_manager_async():
 def main():
     global config, sm, lexique, window_manager  # ✅ Ajouter window_manager
     
-    print("🚀 Démarrage d'Orion...")
+    # ✅ PREMIÈRE CHOSE : Rotation des logs (avant tout autre traitement)
+    init_new_session()
+    #pol = create_pol(source_id=1)
+    pol.write(1, "🚀 Démarrage d'Orion...", "log+print")  # LEGER + console
     
     sm = SoundManager(event_bus=bus)
     
@@ -260,22 +265,27 @@ def main():
     
     # ✅ NOUVEAU : Gestionnaire de signal pour Ctrl+C
     def signal_handler(sig, frame):
-        print("\n🛑 Interruption détectée (Ctrl+C)")
-        print("🔄 Arrêt en cours...")
+        pol.write(1, "🛑 Interruption détectée (Ctrl+C)", "log")
+        #print("\n🛑 Interruption détectée (Ctrl+C)")
+        pol.write(1, "🔄 Arrêt en cours...", "log")
+        #print("🔄 Arrêt en cours...")
         
         # Arrêter proprement les composants
         try:
             if sm:
-                print("🔊 Arrêt SoundManager...")
+                pol.write(1, "🔊 Arrêt SoundManager...", "log")
+                #print("🔊 Arrêt SoundManager...")
                 sm.stop_all()
-            
-            print("🚪 Fermeture application...")
+
+            pol.write(1, "🚪 Fermeture application...", "log")
+            #print("🚪 Fermeture application...")
             app.quit()  # Fermer l'application Qt
             
         except Exception as e:
-            print(f"⚠️ Erreur lors de l'arrêt: {e}")
-        
-        print("👋 Au revoir !")
+            pol.write(3, f"⚠️ Erreur lors de l'arrêt: {e}", "log")
+            #print(f"⚠️ Erreur lors de l'arrêt: {e}")
+
+        pol.write(1, "👋 Au revoir !", "log")
         sys.exit(0)
     
     # ✅ INSTALLER le gestionnaire de signal
@@ -294,9 +304,9 @@ def main():
     lexique.set_config_manager(config)
     
     # ✅ Maintenant on peut faire update_SRGS
-    print("🎙️ Génération des grammaires SRGS...")
+    pol.write(1, "🎙️ Génération des grammaires SRGS...", "log")
     if not lexique.update_SRGS(force=True):
-       print("⚠️ Problème avec la génération des grammaires, continuons...")
+       pol.write(3, "⚠️ Problème avec la génération des grammaires, continuons...", "log+print")
 
     # ✅ Créer le gestionnaire de fenêtres AVEC la config
     from core.interface.window_manager import WindowManager
@@ -318,21 +328,21 @@ def main():
             secondary_screen = screens[1]
             geometry = secondary_screen.geometry()
             interface.move(geometry.x() + 100, geometry.y() + 100)
-            print(f"📍 Positionnement sur écran secondaire: {geometry.x() + 100}, {geometry.y() + 100}")
+            pol.write(1, f"📍 Positionnement sur écran secondaire: {geometry.x() + 100}, {geometry.y() + 100}", "log")
     
     # Afficher l'interface
     interface.show()
     
     # ✅ Connecter la sauvegarde à la fermeture
     def on_close(event):
-        print("💾 Sauvegarde de la position de fenêtre...")
+        pol.write(1, "💾 Sauvegarde de la position de fenêtre...", "log")
         window_manager.save_window_state(interface, "orion_main")
         event.accept()
     
     # ✅ Connecter l'événement de fermeture proprement
     interface.closeEvent = on_close
-    
-    print("✅ Interface créée et positionnée")
+
+    pol.write(1, "✅ Interface créée et positionnée", "log")
 
     # --- abonnement aux événements ---
     bus.subscribe(on_bus_message)
@@ -369,23 +379,24 @@ def main():
             }
         }
         bus.publish(startup_event)
-        print("🎤 Message d'accueil envoyé via bus")
-    
+        
+        pol.write(1, "🎤 Message d'accueil envoyé via bus", "log")
+
     # Lancer le message d'accueil en thread (optionnel)
     greeting_thread = threading.Thread(target=send_startup_greeting, daemon=True)
     greeting_thread.start()
 
     # ✅ Boucle principale Qt
-    print("🚀 Interface lancée - Listen manager en cours de démarrage...")
-    print("💡 Utilisez Ctrl+C pour arrêter l'application")
-    
+    pol.write(1, "🚀 Interface lancée - Listen manager en cours de démarrage...", "log+print")
+    pol.write(1, "💡 Utilisez Ctrl+C pour arrêter l'application", "log")
+
     try:
         exit_code = app.exec()
     except KeyboardInterrupt:
-        print("\n🛑 Interruption clavier détectée")
+        pol.write(3, "🛑 Interruption clavier détectée", "log+print")
         signal_handler(signal.SIGINT, None)
-    
-    print("Au revoir !")
+
+    pol.write(1, "👋 Au revoir !", "log+print")
     exit(exit_code)
 
 if __name__ == "__main__":

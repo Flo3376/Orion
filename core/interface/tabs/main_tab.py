@@ -6,6 +6,8 @@ Onglet principal - Tableau de bord et visualisation
 from __future__ import annotations
 from PySide6 import QtCore, QtGui, QtWidgets
 from core.bus import EventBus
+from core.pol import create_pol
+pol = create_pol(source_id=2)
 
 
 class MainTab(QtWidgets.QWidget):
