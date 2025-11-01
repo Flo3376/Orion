@@ -1,0 +1,31 @@
+[2025-10-31 14:30:15] [INFO] 🚀 Démarrage du système ORION
+[2025-10-31 14:30:16] [INFO] 🔧 Chargement de la configuration...
+[2025-10-31 14:30:16] [SUCCESS] ✅ Configuration chargée avec succès
+[2025-10-31 14:30:17] [INFO] 🎤 Initialisation du module de reconnaissance vocale
+[2025-10-31 14:30:18] [WARNING] ⚠️ Microphone par défaut détecté mais niveau bas
+[2025-10-31 14:30:18] [INFO] 🎧 Connexion au service Spotify...
+[2025-10-31 14:30:19] [SUCCESS] ✅ Spotify connecté
+[2025-10-31 14:30:20] [INFO] 🔊 Test du système audio
+[2025-10-31 14:30:21] [DEBUG] 🔍 Volume système : 85%
+[2025-10-31 14:30:22] [INFO] 📡 Démarrage du serveur EventBus
+[2025-10-31 14:30:23] [SUCCESS] ✅ EventBus opérationnel sur port 8080
+[2025-10-31 14:30:24] [INFO] 🎵 Lorem ipsum dolor sit amet, consectetur adipiscing elit
+[2025-10-31 14:30:25] [INFO] 🎶 Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua
+[2025-10-31 14:30:26] [DEBUG] 🔍 Ut enim ad minim veniam, quis nostrud exercitation
+[2025-10-31 14:30:27] [INFO] 🎸 Ullamco laboris nisi ut aliquip ex ea commodo consequat
+[2025-10-31 14:30:28] [WARNING] ⚠️ Duis aute irure dolor in reprehenderit in voluptate
+[2025-10-31 14:30:29] [INFO] 🎺 Velit esse cillum dolore eu fugiat nulla pariatur
+[2025-10-31 14:30:30] [ERROR] ❌ Excepteur sint occaecat cupidatat non proident
+[2025-10-31 14:30:31] [INFO] 🎻 Sunt in culpa qui officia deserunt mollit anim id est laborum
+[2025-10-31 14:30:32] [SUCCESS] ✅ Sed ut perspiciatis unde omnis iste natus error
+[2025-10-31 14:30:33] [INFO] 🎤 Sit voluptatem accusantium doloremque laudantium
+[2025-10-31 14:30:34] [DEBUG] 🔍 Totam rem aperiam eaque ipsa quae ab illo inventore
+[2025-10-31 14:30:35] [INFO] 🎧 Veritatis et quasi architecto beatae vitae dicta sunt
+[2025-10-31 14:30:36] [WARNING] ⚠️ Explicabo nemo enim ipsam voluptatem quia voluptas
+[2025-10-31 14:30:37] [INFO] 🔊 Sit aspernatur aut odit aut fugit sed quia consequuntur
+[2025-10-31 14:30:38] [SUCCESS] ✅ Magni dolores eos qui ratione voluptatem sequi nesciunt
+[2025-10-31 14:30:39] [INFO] 🎵 Neque porro quisquam est qui dolorem ipsum quia dolor
+[2025-10-31 14:30:40] [ERROR] ❌ Sit amet consectetur adipisci velit sed quia non numquam
+[2025-10-31 14:30:41] [INFO] 🎶 Eius modi tempora incidunt ut labore et dolore magnam
+[2025-10-31 14:30:42] [DEBUG] 🔍 Aliquam quaerat voluptatem ut enim ad minima veniam
+[2025-10-31 14:30:43] [INFO] 🎸 Quis autem vel eum iure reprehenderit qui in ea voluptate
