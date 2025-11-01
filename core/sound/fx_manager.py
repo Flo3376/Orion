@@ -16,6 +16,8 @@ from pathlib import Path
 from typing import Union, List, Dict, Any
 import threading
 import time
+from core.pol import create_pol
+pol = create_pol(source_id=50)
 
 # Instance globale
 _fx_manager_instance = None
@@ -35,7 +37,8 @@ class FXManager:
         self.config_manager = config_manager
         self.event_bus = event_bus
         self.processor = None  # Sera initialisé lors de la première utilisation
-        
+
+        pol.write(1, "🎛️ FX Manager initialisé", mode="log")
         print("🎛️ FX Manager initialisé")
     
     def _get_processor(self):
@@ -59,14 +62,14 @@ class FXManager:
             source = Path(source_path)
             
             if not source.exists():
-                print(f"❌ Fichier source introuvable: {source}")
+                pol.write(3, f"❌ Fichier source introuvable: {source}", mode="log+print")
                 return False
             
             # Calculer le chemin skin
             skin_path = source.parent / "skin.wav"
             
-            print(f"🎨 Création skin: {source.name} → {skin_path.name}")
-            
+            pol.write(1, f"🎨 Création skin: {source.name} → {skin_path.name}", mode="log")
+
             # Publier événement de monitoring (bus fragile, on protège)
             try:
                 self.event_bus.publish({
@@ -89,14 +92,14 @@ class FXManager:
             success = processor.apply_skin_effects(str(source), str(skin_path), skin_params)
             
             if success:
-                print(f"✅ Skin créé: {skin_path.name}")
+                pol.write(1, f"✅ Skin créé: {skin_path.name}", mode="log")
             else:
-                print(f"❌ Échec création skin: {skin_path.name}")
-            
+                pol.write(3, f"❌ Échec création skin: {skin_path.name}", mode="log+print")
+
             return success
             
         except Exception as e:
-            print(f"❌ Erreur create_skin_for: {e}")
+            pol.write(3, f"❌ Erreur create_skin_for: {e}", mode="log+print")
             import traceback
             traceback.print_exc()
             return False
@@ -116,7 +119,7 @@ class FXManager:
             source = Path(source_path)
             
             if not source.exists():
-                print(f"❌ Fichier source introuvable: {source}")
+                pol.write(3, f"❌ Fichier source introuvable: {source}", mode="log+print")
                 return False
             
             # Publier événement de monitoring (bus fragile, on protège)
@@ -136,8 +139,8 @@ class FXManager:
             # Résoudre la liste d'effets
             effects_list = self._resolve_effects_list(effects)
             
-            print(f"🎛️ Création effets pour {source.name}: {effects_list}")
-            
+            pol.write(1, f"🎛️ Création effets pour {source.name}: {effects_list}", mode="log")
+
             # === ÉTAPE 1 : S'assurer que skin.wav existe ===
             skin_path = source.parent / "skin.wav"
             
@@ -148,11 +151,11 @@ class FXManager:
                     print("❌ Impossible de créer le skin, abandon")
                     return False
             else:
-                print("⚡ Skin existant utilisé")
+                pol.write(1, f"⚡ Skin existant utilisé: {skin_path.name}", mode="log")
             
             # === ÉTAPE 2 : Générer les effets environment depuis skin ===
             if effects == "none":
-                print("ℹ️ Mode 'none' → skin seulement")
+                pol.write(1, f"ℹ️ Mode 'none' → skin seulement", mode="log")
                 return True
             
             processor = self._get_processor()
@@ -161,30 +164,29 @@ class FXManager:
             
             for effect in effects_list:
                 target_path = source.parent / f"{effect}.wav"
-                
-                print(f"🌍 Génération {effect}: {skin_path.name} → {target_path.name}")
+                pol.write(1, f"🌍 Génération {effect}: {skin_path.name} → {target_path.name}", mode="log")
                 
                 success = processor.apply_environment_effect(str(skin_path), str(target_path), effect)
                 
                 if success:
                     success_count += 1
-                    print(f"✅ Effet {effect} créé")
+                    pol.write(1, f"✅ Effet {effect} créé", mode="log")
                 else:
-                    print(f"❌ Échec effet {effect}")
-            
+                    pol.write(3, f"❌ Échec effet {effect}", mode="log+print")
+
             # Résultat global
             if success_count == total_effects:
-                print(f"✅ Tous les effets créés ({success_count}/{total_effects})")
+                pol.write(1, f"✅ Tous les effets créés ({success_count}/{total_effects})", mode="log")
                 return True
             elif success_count > 0:
-                print(f"⚠️ Succès partiel ({success_count}/{total_effects})")
+                pol.write(1, f"⚠️ Succès partiel ({success_count}/{total_effects})", mode="log")
                 return True
             else:
-                print(f"❌ Aucun effet créé (0/{total_effects})")
+                pol.write(3, f"❌ Aucun effet créé (0/{total_effects})", mode="log+print")
                 return False
                 
         except Exception as e:
-            print(f"❌ Erreur create_for: {e}")
+            pol.write(3, f"❌ Erreur create_for: {e}", mode="log+print")
             import traceback
             traceback.print_exc()
             return False
@@ -204,7 +206,7 @@ class FXManager:
         elif isinstance(effects, str) and effects in available_effects:
             return [effects]
         else:
-            print(f"⚠️ Effets non reconnus: {effects}, utilisation par défaut")
+            pol.write(3, f"⚠️ Effets non reconnus: {effects}, utilisation par défaut", mode="log+print")
             return available_effects
     
     def _get_skin_params_from_config(self) -> Dict[str, Any]:
@@ -224,7 +226,7 @@ class FXManager:
         }
         
         # ✅ DEBUG : Voir EXACTEMENT ce qui est lu
-        print(f"🔍 DEBUG config lue: {params}")
+        pol.write(1, f"🔍 DEBUG config lue: {params}", mode="log")
         return params
     
     def _skin_needs_regeneration(self, skin_path: Path) -> bool:

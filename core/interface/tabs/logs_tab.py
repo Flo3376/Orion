@@ -78,6 +78,8 @@ class LogsTab(QtWidgets.QWidget):
         self.module_combo.addItem("Interface Log", 22)  # Valeur 22 pour INT_LOG
         self.module_combo.addItem("Grammar", 3)  # Valeur 3 pour Grammar
         self.module_combo.addItem("Vocalizer", 4)  # Valeur 4 pour Vocalizer
+        self.module_combo.addItem("FX Manager", 50)  # Valeur 50 pour FX Manager
+        self.module_combo.addItem("FX Générateur", 51)  # Valeur 51 pour FX Générateur
         for i in range(5, 11):
             self.module_combo.addItem(f"Inconnu{i}", i)
         self.module_combo.setStyleSheet("""

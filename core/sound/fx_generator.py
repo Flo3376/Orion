@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from enum import IntEnum
 import numpy as np
 from scipy.signal import butter, filtfilt
+from core.pol import create_pol
+pol = create_pol(source_id=51)
 
 class Priority(IntEnum):
     """Priorités des tâches de génération"""
@@ -92,13 +94,15 @@ class FXGenerator:
         
         # Vérifier si déjà existe (sauf si force_remake)
         if not force_remake and Path(target_path).exists():
-            logging.debug(f"✅ Effet déjà existant: {effect} -> {Path(target_path).name}")
+            pol.write(1, f"Effet déjà existant: {effect} pour {Path(source_path).name}", mode="log")
+            #logging.debug(f"✅ Effet déjà existant: {effect} -> {Path(target_path).name}")
             return True
         
         # Éviter les doublons dans la queue
         job_key = f"{source_path}:{effect}"
         if job_key in self.active_jobs and not force_remake:
-            logging.debug(f"⏸️ Job déjà en queue: {job_key}")
+            pol.write(1, f"Job déjà en queue: {job_key}", mode="log")
+            #logging.debug(f"⏸️ Job déjà en queue: {job_key}")
             return True
         
         # Créer et ajouter le job
@@ -118,7 +122,8 @@ class FXGenerator:
         if queue_size > self.stats["queue_peak"]:
             self.stats["queue_peak"] = queue_size
         
-        print(f"📋 Job programmé: {effect} pour {Path(source_path).parent.name} (priorité: {priority.name})")
+        pol.write(1, f"Job programmé: {effect} pour {Path(source_path).parent.name} (priorité: {priority.name})", mode="log")
+        #print(f"📋 Job programmé: {effect} pour {Path(source_path).parent.name} (priorité: {priority.name})")
         return True
     
     # =========================================================================
@@ -135,13 +140,13 @@ class FXGenerator:
             
             # Charger l'audio source
             if not self.effects_processor.load_audio(job.source_path):
-                print(f"❌ Impossible de charger: {job.source_path}")
+                pol.write(3, f"❌ Impossible de charger: {job.source_path}", mode="log+print")
                 self.stats["errors"] += 1
                 return False
             
             # Vérifier si target existe déjà (sauf force_remake)
             if not job.force_remake and Path(job.target_path).exists():
-                print(f"⏭️ Effet déjà existant: {Path(job.target_path).name}")
+                pol.write(1, f"⏭️ Effet déjà existant: {Path(job.target_path).name}", mode="log")
                 self.stats["skipped"] += 1
                 return True
             
@@ -163,12 +168,11 @@ class FXGenerator:
             
             processing_time = time.time() - start_time
             self.stats["generated"] += 1
-            
-            print(f"✅ Généré {job.effect_type}: {Path(job.target_path).name} ({processing_time:.2f}s)")
+            pol.write(1, f"✅ Généré {job.effect_type}: {Path(job.target_path).name} ({processing_time:.2f}s)", mode="log")
             return True
             
         except Exception as e:
-            print(f"❌ Erreur génération {job.effect_type}: {e}")
+            pol.write(3, f"❌ Erreur génération {job.effect_type}: {e}", mode="log+print")
             self.stats["errors"] += 1
             return False
     
@@ -183,14 +187,14 @@ class FXGenerator:
             if success:
                 # Logger seulement si succès
                 try:
-                    print(f"✅ Effet {job.effect_type} généré: {Path(job.target_path).name}")
+                    pol.write(1, f"✅ Effet {job.effect_type} généré: {Path(job.target_path).name}", mode="log")
                 except:
                     pass  # Ignorer les erreurs de logging
             
         except Exception as e:
             # 🔧 FIX: Gestion d'erreur plus robuste
             try:
-                print(f"❌ Erreur génération {job.effect_type}: {type(e).__name__}")
+                pol.write(3, f"❌ Erreur génération {job.effect_type}: {type(e).__name__}", mode="log+print")
             except:
                 pass  # Ignorer les erreurs de logging
                 
@@ -228,7 +232,7 @@ class FXGenerator:
                 else:
                     # Vraie erreur à logger
                     try:
-                        print(f"❌ Erreur worker FX ({error_type}): {e}")
+                        pol.write(3, f"❌ Erreur worker FX ({error_type}): {e}", mode="log+print")
                         # Ne pas faire de traceback complet pour éviter les exceptions en cascade
                     except:
                         # Si même le print échoue, juste continuer
@@ -245,11 +249,11 @@ class FXGenerator:
         """Valide les paramètres d'entrée"""
         
         if not Path(source_path).exists():
-            print(f"⚠️ Fichier source inexistant: {source_path}")
+            pol.write(3, f"⚠️ Fichier source inexistant: {source_path}", mode="log+print")
             return False
         
         if effect not in self.AVAILABLE_EFFECTS:
-            print(f"⚠️ Effet inconnu: {effect}. Disponibles: {self.AVAILABLE_EFFECTS}")
+            pol.write(3, f"⚠️ Effet inconnu: {effect}. Disponibles: {self.AVAILABLE_EFFECTS}", mode="log+print" )
             return False
         
         return True
@@ -266,7 +270,7 @@ class FXGenerator:
             target_dir = source.parent
             target_file = target_dir / f"{effect}.wav"
             
-            print(f"🎨 Source SKIN détectée: {source.name} → {target_file.name}")
+            pol.write(1, f"🎨 Source SKIN détectée: {source.name} → {target_file.name}", mode="log")
             return target_file
         
         elif source.name == "brut.wav":
@@ -275,7 +279,7 @@ class FXGenerator:
             target_dir = source.parent
             target_file = target_dir / f"{effect}.wav"
             
-            print(f"🎤 Source BRUT détectée: {source.name} → {target_file.name}")
+            pol.write(1, f"🎤 Source BRUT détectée: {source.name} → {target_file.name}", mode="log")
             return target_file
         
         else:
@@ -327,17 +331,17 @@ class FXGenerator:
         try:
             from test_voice_effects import VoiceEffectsProcessor
             self.effects_processor = VoiceEffectsProcessor()
-            print("🔧 Processeur d'effets initialisé")
+            pol.write(1, "🔧 Processeur d'effets initialisé", mode="log+print")
         except ImportError as e:
-            print(f"❌ Impossible d'importer VoiceEffectsProcessor: {e}")
-            print("💡 Assurez-vous que test_voice_effects.py est accessible")
+            pol.write(3, f"❌ Impossible d'importer VoiceEffectsProcessor: {e}", mode="log+print")
+            pol.write(3, "💡 Assurez-vous que test_voice_effects.py est accessible", mode="log+print")
             raise
     
     def _apply_helmet_numpy(self, audio_data: np.ndarray, sample_rate: int, config: Dict) -> np.ndarray:
         """Applique effet helmet avec numpy (pas FFmpeg)"""
         try:
-            print("🌍 Environment Numpy: HELMET")
-            
+            pol.write(1, "🌍 Environment Numpy: HELMET", mode="log")
+
             # Paramètres simplifiés
             helmet_config = config.get("helmet", {})
             
@@ -357,11 +361,11 @@ class FXGenerator:
             # Éviter le clipping
             result = np.clip(result, -1.0, 1.0)
             
-            print(f"✅ Helmet numpy appliqué (lowpass: {lowpass_freq}Hz, volume: {volume_factor})")
+            pol.write(1, f"✅ Helmet numpy appliqué (lowpass: {lowpass_freq}Hz, volume: {volume_factor})", mode="log+print")
             return result
             
         except Exception as e:
-            print(f"❌ Erreur helmet numpy: {e}")
+            pol.write(3, f"❌ Erreur helmet numpy: {e}", mode="log+print")
             return audio_data  # Retourner original en cas d'erreur
     
     def _apply_effect_numpy(self, audio_data: np.ndarray, sample_rate: int, effect: str, config: Dict) -> Optional[np.ndarray]:
@@ -374,7 +378,7 @@ class FXGenerator:
         elif effect == "helmet":
             return self._apply_helmet_numpy(audio_data, sample_rate, config)  # ← NOUVEAU
         else:
-            print(f"❌ Effet numpy non supporté: {effect}")
+            pol.write(3, f"❌ Effet numpy non supporté: {effect}", mode="log+print")
             return None
     
     # =========================================================================
@@ -397,7 +401,7 @@ class FXGenerator:
         if not self.running:
             return
         
-        print("🛑 Arrêt du FX Generator...")
+        pol.write(1, "🛑 Arrêt du FX Generator...", mode="log+print")
         self.running = False
         
         # Attendre que les workers se terminent
@@ -414,8 +418,8 @@ class FXGenerator:
         
         self.workers.clear()
         self.active_jobs.clear()
+        pol.write(1, f"✅ FX Generator arrêté. Stats: {self.stats}", mode="log")
         
-        print(f"✅ FX Generator arrêté. Stats: {self.stats}")
 
     def _start_workers(self):
         """Démarre les workers de génération"""
@@ -430,8 +434,8 @@ class FXGenerator:
                 )
                 worker.start()
                 self.workers.append(worker)
-                
-            print(f"🔧 {self.max_workers} worker(s) FX démarré(s)")
+
+            pol.write(1, f"🔧 {self.max_workers} worker(s) FX démarré(s)", mode="log+print")
 # =============================================================================
 # 🎯 INSTANCE GLOBALE
 # =============================================================================
