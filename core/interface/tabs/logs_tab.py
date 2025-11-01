@@ -19,7 +19,7 @@ class LogsTab(QtWidgets.QWidget):
         
         # ✅ Chemin simple : logs.txt à la racine du projet
         # Si on lance depuis la racine du projet, logs.txt sera trouvé
-        self.logs_file_path = "logs.txt"
+        self.logs_file_path = "./logs/orion.log"
         
         self._setup_ui()
         self._setup_timer()

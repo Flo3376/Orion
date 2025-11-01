@@ -177,6 +177,10 @@ class ConfigTab(QtWidgets.QWidget):
             ("Effet", "combo", ["auto","none", "ship", "city", "helmet"], 
              self._get_config_value("vocalisation.effect", "none"),
              "Effet appliqué à la voix lors de la synthèse vocale"),
+            
+            ("Message d'accueil", "text", 
+             self._get_config_value("vocalisation.welcome", "Bonjour, je suis votre copilote Orion. Système en cours de démarrage."),
+             "Message personnalisé prononcé au démarrage de l'application"),
             # ✅ Subsection ALTERNATIVE (bleue)
             ("__subsection_alt__", "Skin audio de l'assistant", None, "Stylisation audio de l'assistant"),
 
@@ -1084,6 +1088,7 @@ class ConfigTab(QtWidgets.QWidget):
             # === TTS GÉNÉRAL ===
             "Moteur Vocal": "vocalisation.engine",
             "Effet": "vocalisation.effect",
+            "Message d'accueil": "vocalisation.welcome",
             
             # === 🌿 SKIN AUDIO (SUBSECTION ALTERNATIVE VERTE) ===
             "Hauteur du skin": "effects.skin.pitch",           # Skin Audio (priorité sur Edge)

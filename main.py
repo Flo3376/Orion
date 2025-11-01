@@ -353,13 +353,17 @@ def main():
     def send_startup_greeting():
         """Envoie un message d'accueil après démarrage"""
         time.sleep(2)  # Attendre 2 secondes après démarrage
+        
+        # ✅ NOUVEAU : Récupérer le message d'accueil personnalisé depuis la config
+        welcome_message = config.get("vocalisation.welcome", "Bonjour, je suis votre copilote Orion. Système en cours de démarrage.")
+        
         startup_event = {
             "name": "tts.speak",
             "state": "request",
             "payload": {
                 "engine": config.get("vocalisation.engine", "edgetts"),
                 "action": "start_orion", 
-                "text": "Bonjour, je suis votre copilote Orion. Système en cours de démarrage.",
+                "text": welcome_message,  # ✅ Utiliser le message personnalisé
                 "effect": config.get("vocalisation.effect", "none"),
                 "play_now": True
             }
